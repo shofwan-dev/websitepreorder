@@ -18,6 +18,9 @@ class SettingsSeeder extends Seeder
             'tagline' => 'Menghadirkan keindahan kaligrafi islami dalam setiap rumah Muslim',
             'email' => 'admin@pokaligrafi.com',
             'phone' => '0812-3456-7890',
+            'whatsapp' => '6281234567890',
+            'instagram' => '@pokaligrafi',
+            'business_hours' => 'Senin - Jumat: 09:00 - 17:00 WIB',
             'address' => 'Jl. Pengrajin No. 123, Yogyakarta',
             'site_logo' => '', // Empty by default, will be filled when user uploads
         ];

@@ -632,12 +632,21 @@
                 <div class="col-md-4 mb-4">
                     <h5>Follow Kami</h5>
                     <div class="mb-3">
-                        <a href="#" class="text-white me-3"><i class="fab fa-instagram fa-2x"></i></a>
-                        <a href="#" class="text-white me-3"><i class="fab fa-whatsapp fa-2x"></i></a>
-                        <a href="#" class="text-white"><i class="fab fa-facebook fa-2x"></i></a>
+                        @if(!empty($site_settings['instagram'] ?? ''))
+                        <a href="https://instagram.com/{{ ltrim($site_settings['instagram'], '@') }}" target="_blank" class="text-white me-3" title="Instagram"><i class="fab fa-instagram fa-2x"></i></a>
+                        @endif
+                        @if(!empty($site_settings['whatsapp'] ?? ''))
+                        <a href="https://wa.me/{{ str_replace(['-', ' ', '+'], '', $site_settings['whatsapp']) }}" target="_blank" class="text-white me-3" title="WhatsApp"><i class="fab fa-whatsapp fa-2x"></i></a>
+                        @endif
+                        @if(!empty($site_settings['facebook'] ?? ''))
+                        <a href="{{ str_contains($site_settings['facebook'], 'http') ? $site_settings['facebook'] : 'https://facebook.com/' . ltrim($site_settings['facebook'], '@') }}" target="_blank" class="text-white me-3" title="Facebook"><i class="fab fa-facebook fa-2x"></i></a>
+                        @endif
+                        @if(!empty($site_settings['twitter'] ?? ''))
+                        <a href="https://twitter.com/{{ ltrim($site_settings['twitter'], '@') }}" target="_blank" class="text-white me-3" title="Twitter/X"><i class="fab fa-x-twitter fa-2x"></i></a>
+                        @endif
                     </div>
                     <h5>Jam Operasional</h5>
-                    <p><i class="fas fa-clock me-2"></i> Senin - Jumat: 09:00 - 17:00 WIB</p>
+                    <p><i class="fas fa-clock me-2"></i> {{ $site_settings['business_hours'] ?? 'Senin - Jumat: 09:00 - 17:00 WIB' }}</p>
                 </div>
             </div>
             <hr class="bg-light">

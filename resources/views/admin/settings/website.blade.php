@@ -148,6 +148,90 @@
                         </div>
                     </div>
                     
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">WhatsApp</label>
+                            <input type="text" 
+                                   class="form-control @error('whatsapp') is-invalid @enderror" 
+                                   name="whatsapp" 
+                                   value="{{ old('whatsapp', $settings['whatsapp'] ?? '6281234567890') }}"
+                                   placeholder="6281234567890">
+                            @error('whatsapp')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Format internasional dengan kode negara (contoh: 6281234567890)
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Instagram</label>
+                            <input type="text" 
+                                   class="form-control @error('instagram') is-invalid @enderror" 
+                                   name="instagram" 
+                                   value="{{ old('instagram', $settings['instagram'] ?? '@pokaligrafi') }}"
+                                   placeholder="@pokaligrafi">
+                            @error('instagram')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Username Instagram (dengan atau tanpa @)
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Facebook</label>
+                            <input type="text" 
+                                   class="form-control @error('facebook') is-invalid @enderror" 
+                                   name="facebook" 
+                                   value="{{ old('facebook', $settings['facebook'] ?? '') }}"
+                                   placeholder="pokaligrafi atau URL lengkap">
+                            @error('facebook')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Username/halaman Facebook atau URL lengkap
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Twitter/X</label>
+                            <input type="text" 
+                                   class="form-control @error('twitter') is-invalid @enderror" 
+                                   name="twitter" 
+                                   value="{{ old('twitter', $settings['twitter'] ?? '') }}"
+                                   placeholder="@pokaligrafi">
+                            @error('twitter')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Username Twitter/X (dengan atau tanpa @)
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Jam Operasional</label>
+                        <input type="text" 
+                               class="form-control @error('business_hours') is-invalid @enderror" 
+                               name="business_hours" 
+                               value="{{ old('business_hours', $settings['business_hours'] ?? 'Senin - Jumat: 09:00 - 17:00 WIB') }}"
+                               placeholder="Senin - Jumat: 09:00 - 17:00 WIB">
+                        @error('business_hours')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Jam operasional bisnis untuk ditampilkan di halaman kontak
+                        </div>
+                    </div>
+
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Alamat</label>
                         <textarea class="form-control @error('address') is-invalid @enderror" 
@@ -192,6 +276,14 @@
                     <li class="mb-2">
                         <i class="fas fa-check-circle text-success me-2"></i>
                         <span class="text-muted">Email & telepon di kontak</span>
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        <span class="text-muted">WhatsApp, Instagram, Facebook & Twitter</span>
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        <span class="text-muted">Jam operasional di kontak & footer</span>
                     </li>
                     <li class="mb-2">
                         <i class="fas fa-check-circle text-success me-2"></i>

@@ -408,12 +408,15 @@ class HomeController extends Controller
      */
     public function contact()
     {
+        // Get website settings from database
+        $settings = \App\Models\Setting::getGroup('website');
+        
         return view('contact', [
-            'whatsapp' => '6281234567890',
-            'email' => 'admin@pokaligrafi.com',
-            'instagram' => '@pokaligrafi',
-            'address' => 'Jl. Pengrajin No. 123, Yogyakarta',
-            'business_hours' => 'Senin - Jumat: 09:00 - 17:00 WIB'
+            'whatsapp' => $settings['whatsapp'] ?? '6281234567890',
+            'email' => $settings['email'] ?? 'admin@pokaligrafi.com',
+            'instagram' => $settings['instagram'] ?? '@pokaligrafi',
+            'address' => $settings['address'] ?? 'Jl. Pengrajin No. 123, Yogyakarta',
+            'business_hours' => $settings['business_hours'] ?? 'Senin - Jumat: 09:00 - 17:00 WIB'
         ]);
     }
     

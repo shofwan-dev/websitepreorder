@@ -31,6 +31,11 @@ class SettingController extends Controller
             'tagline' => ['nullable', 'string', 'max:500'],
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
+            'whatsapp' => ['nullable', 'string', 'max:50'],
+            'instagram' => ['nullable', 'string', 'max:100'],
+            'facebook' => ['nullable', 'string', 'max:255'],
+            'twitter' => ['nullable', 'string', 'max:100'],
+            'business_hours' => ['nullable', 'string', 'max:255'],
             'address' => ['nullable', 'string', 'max:1000'],
             'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg,svg,ico,webp', 'max:2048'],
         ]);
@@ -40,6 +45,11 @@ class SettingController extends Controller
         Setting::setValue('tagline', $validated['tagline'] ?? '', 'website');
         Setting::setValue('email', $validated['email'] ?? '', 'website');
         Setting::setValue('phone', $validated['phone'] ?? '', 'website');
+        Setting::setValue('whatsapp', $validated['whatsapp'] ?? '', 'website');
+        Setting::setValue('instagram', $validated['instagram'] ?? '', 'website');
+        Setting::setValue('facebook', $validated['facebook'] ?? '', 'website');
+        Setting::setValue('twitter', $validated['twitter'] ?? '', 'website');
+        Setting::setValue('business_hours', $validated['business_hours'] ?? '', 'website');
         Setting::setValue('address', $validated['address'] ?? '', 'website');
 
         // Handle logo upload

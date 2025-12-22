@@ -32,7 +32,7 @@
                             </div>
                             <div>
                                 <h5 class="fw-bold mb-2">WhatsApp</h5>
-                                <p class="text-muted mb-2">{{ $site_settings['phone'] ?? $phone ?? '0812-3456-7890' }}</p>
+                                <p class="text-muted mb-2">{{ $whatsapp ?? '6281234567890' }}</p>
                                 <a href="https://wa.me/{{ str_replace(['-', ' ', '+'], '', $whatsapp ?? '6281234567890') }}" 
                                    target="_blank"
                                    class="btn btn-sm btn-success">
@@ -49,8 +49,8 @@
                             </div>
                             <div>
                                 <h5 class="fw-bold mb-2">Email</h5>
-                                <p class="text-muted mb-2">{{ $site_settings['email'] ?? $email ?? 'admin@pokaligrafi.com' }}</p>
-                                <a href="mailto:{{ $site_settings['email'] ?? $email ?? 'admin@pokaligrafi.com' }}" 
+                                <p class="text-muted mb-2">{{ $email ?? 'admin@pokaligrafi.com' }}</p>
+                                <a href="mailto:{{ $email ?? 'admin@pokaligrafi.com' }}" 
                                    class="btn btn-sm btn-primary">
                                     <i class="fas fa-envelope me-2"></i>Kirim Email
                                 </a>
@@ -83,7 +83,7 @@
                             </div>
                             <div>
                                 <h5 class="fw-bold mb-2">Alamat</h5>
-                                <p class="text-muted mb-0">{{ $site_settings['address'] ?? $address ?? 'Jl. Pengrajin No. 123, Yogyakarta' }}</p>
+                                <p class="text-muted mb-0">{{ $address ?? 'Jl. Pengrajin No. 123, Yogyakarta' }}</p>
                             </div>
                         </div>
 
