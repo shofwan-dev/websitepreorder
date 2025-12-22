@@ -657,7 +657,9 @@
                     <a href="{{ route('about') }}" class="text-white me-3">Tentang Kami</a> |
                     <a href="{{ route('how-it-works') }}" class="text-white me-3">Cara Kerja</a> |
                     <a href="{{ route('faq') }}" class="text-white me-3">FAQ</a> |
-                    <a href="{{ route('contact') }}" class="text-white">Kontak</a>
+                    <a href="{{ route('contact') }}" class="text-white">Kontak</a> |
+                    <a href="{{ route('refund-policy') }}" class="text-white me-3"><i class="fas fa-undo-alt me-1"></i>Refund Policy</a> |
+                    <a href="{{ route('terms-conditions') }}" class="text-white"><i class="fas fa-file-contract me-1"></i>Syarat & Ketentuan</a>
                 </p>
             </div>
         </div>

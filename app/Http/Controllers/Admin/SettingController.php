@@ -249,6 +249,7 @@ class SettingController extends Controller
         file_put_contents($envFile, $envContent);
     }
 
+
     /**
      * Display content management page
      */
@@ -256,10 +257,192 @@ class SettingController extends Controller
     {
         $settings = Setting::whereIn('group', ['content', 'website'])->pluck('value', 'key')->toArray();
         
+        // Populate default content jika belum ada
+        if (empty($settings['refund_policy_content'])) {
+            $settings['refund_policy_content'] = $this->getDefaultRefundPolicy();
+        }
+        
+        if (empty($settings['terms_conditions_content'])) {
+            $settings['terms_conditions_content'] = $this->getDefaultTermsConditions();
+        }
+        
         return view('admin.settings.content', [
             'settings' => $settings
         ]);
     }
+    
+    /**
+     * Get default refund policy content (generic)
+     */
+    private function getDefaultRefundPolicy()
+    {
+        $siteName = Setting::getValue('site_name') ?? 'Pre-Order';
+        
+        return <<<HTML
+<h4>1. Kebijakan Umum</h4>
+<p>{$siteName} berkomitmen memberikan layanan terbaik kepada pelanggan. Kebijakan refund ini dibuat untuk melindungi hak pelanggan sekaligus menjaga keberlanjutan bisnis Pre-Order kami.</p>
+
+<h4>2. Ketentuan Refund</h4>
+<div class="alert alert-info">
+    <strong>Penting!</strong> Karena sifat sistem Pre-Order, refund hanya dapat dilakukan dalam kondisi tertentu.
+</div>
+
+<h5>2.1. Refund Sebelum Produksi Dimulai</h5>
+<ul>
+    <li>Pembatalan dapat dilakukan maksimal <strong>24 jam setelah pembayaran</strong> dengan potongan biaya administrasi 10%</li>
+    <li>Jika kuota PO belum terpenuhi, refund 100% tanpa potongan</li>
+    <li>Setelah kuota terpenuhi dan produksi dimulai, pembatalan tidak dapat dilakukan</li>
+</ul>
+
+<h5>2.2. Refund Setelah Produksi</h5>
+<ul>
+    <li>Refund hanya diberikan jika terjadi <strong>cacat produksi</strong> yang dibuktikan dengan foto/video</li>
+    <li>Kerusakan akibat pengiriman akan ditangani oleh pihak ekspedisi</li>
+    <li>Ketidaksesuaian warna akibat perbedaan layar <strong>bukan</strong> alasan refund</li>
+</ul>
+
+<h4>3. Cara Mengajukan Refund</h4>
+<ol>
+    <li><strong>Hubungi Admin</strong> - Hubungi kami via WhatsApp dengan menyertakan nomor pesanan</li>
+    <li><strong>Kirim Bukti</strong> - Sertakan foto/video produk jika mengklaim cacat produksi</li>
+    <li><strong>Verifikasi</strong> - Tim kami akan memverifikasi dalam 1-3 hari kerja</li>
+    <li><strong>Proses Refund</strong> - Dana dikembalikan dalam 7-14 hari kerja setelah disetujui</li>
+</ol>
+
+<h4>4. Metode Pengembalian</h4>
+<ul>
+    <li>Transfer bank ke rekening yang sama dengan pengirim (verifikasi required)</li>
+    <li>Saldo payment gateway (instant, tanpa biaya transfer)</li>
+    <li>Voucher untuk pesanan berikutnya dengan bonus 5%</li>
+</ul>
+
+<h4>5. Kondisi Khusus</h4>
+<div class="alert alert-warning">
+    <h6>Tidak Ada Refund Untuk:</h6>
+    <ul>
+        <li>Perubahan pikiran/tidak jadi setelah produksi dimulai</li>
+        <li>Kesalahan input alamat oleh pelanggan</li>
+        <li>Keterlambatan pengiriman di luar kendali kami (force majeure)</li>
+        <li>Custom design yang sudah disetujui pelanggan</li>
+    </ul>
+</div>
+
+<div class="alert alert-success mt-4">
+    <strong>Catatan:</strong> Kebijakan ini dapat berubah sewaktu-waktu. Perubahan akan diinformasikan melalui email atau WhatsApp yang terdaftar.
+</div>
+HTML;
+    }
+    
+    /**
+     * Get default terms and conditions content (generic)
+     */
+    private function getDefaultTermsConditions()
+    {
+        $siteName = Setting::getValue('site_name') ?? 'Pre-Order';
+        
+        return <<<HTML
+<div class="alert alert-primary mb-4">
+    Dengan menggunakan layanan kami, Anda dianggap telah membaca, memahami, dan menyetujui seluruh syarat dan ketentuan berikut.
+</div>
+
+<h4>1. Definisi</h4>
+<ul>
+    <li><strong>"Kami"</strong> merujuk pada {$siteName}, platform Pre-Order produk.</li>
+    <li><strong>"Pelanggan"</strong> adalah individu atau badan yang menggunakan layanan kami.</li>
+    <li><strong>"Pre-Order (PO)"</strong> adalah sistem pemesanan produk yang akan diproduksi setelah mencapai kuota minimum.</li>
+    <li><strong>"Produk"</strong> adalah barang yang ditawarkan melalui sistem Pre-Order.</li>
+</ul>
+
+<h4>2. Ketentuan Umum</h4>
+<h5>2.1. Pendaftaran Akun</h5>
+<ul>
+    <li>Pelanggan wajib mendaftar dengan informasi yang benar dan valid</li>
+    <li>Satu nomor WhatsApp hanya dapat terdaftar untuk satu akun</li>
+    <li>Pelanggan bertanggung jawab menjaga kerahasiaan akun dan password</li>
+    <li>Kami berhak menonaktifkan akun yang memberikan informasi palsu</li>
+</ul>
+
+<h5>2.2. Verifikasi Identitas</h5>
+<ul>
+    <li>Untuk keamanan transaksi, kami dapat meminta verifikasi identitas tambahan</li>
+    <li>Verifikasi diperlukan untuk pembayaran dengan nilai tertentu</li>
+    <li>Data pribadi pelanggan akan dilindungi sesuai kebijakan privasi</li>
+</ul>
+
+<h4>3. Sistem Pre-Order</h4>
+<h5>3.1. Mekanisme Pre-Order</h5>
+<ul>
+    <li>Produk akan diproduksi setelah kuota minimum terpenuhi</li>
+    <li>Estimasi waktu produksi adalah 7-10 hari kerja setelah kuota terpenuhi</li>
+    <li>Kami berhak menutup Pre-Order jika kuota maksimum tercapai</li>
+    <li>Jika kuota tidak terpenuhi dalam 30 hari, dana akan dikembalikan 100%</li>
+</ul>
+
+<h5>3.2. Harga dan Pembayaran</h5>
+<ul>
+    <li>Harga yang tertera sudah termasuk pajak (jika ada)</li>
+    <li>Ongkos kirim dihitung saat checkout berdasarkan alamat tujuan</li>
+    <li>Pembayaran dilakukan melalui payment gateway resmi (iPaymu atau metode lain yang tersedia)</li>
+    <li>Bukti pembayaran otomatis tersimpan dalam sistem</li>
+    <li>Kami tidak bertanggung jawab atas biaya transfer antar bank</li>
+</ul>
+
+<h4>4. Pengiriman</h4>
+<h5>4.1. Estimasi Waktu</h5>
+<ul>
+    <li>Pengiriman dilakukan setelah produk selesai dan lolos QC</li>
+    <li>Estimasi pengiriman 2-5 hari kerja (tergantung lokasi)</li>
+    <li>Keterlambatan di luar kendali kami tidak menjadi alasan refund</li>
+</ul>
+
+<h5>4.2. Tanggung Jawab Pengiriman</h5>
+<ul>
+    <li>Produk diasuransikan untuk melindungi dari kerusakan pengiriman</li>
+    <li>Pelanggan wajib memeriksa kondisi paket saat diterima</li>
+    <li>Kerusakan akibat pengiriman harus dilaporkan dalam 1x24 jam</li>
+    <li>Foto unboxing sangat disarankan sebagai bukti jika terjadi masalah</li>
+</ul>
+
+<h4>5. Garansi Produk</h4>
+<div class="alert alert-info">
+    <h6>Cakupan Garansi (1 Tahun):</h6>
+    <ul>
+        <li>Cacat produksi pada bahan</li>
+        <li>Kerusakan komponen dalam kondisi pemakaian normal</li>
+        <li>Kualitas produk yang tidak sesuai standar</li>
+    </ul>
+</div>
+
+<div class="alert alert-warning">
+    <h6>Tidak Termasuk Garansi:</h6>
+    <ul>
+        <li>Kerusakan akibat kelalaian pengguna</li>
+        <li>Modifikasi atau perbaikan oleh pihak ketiga</li>
+        <li>Pemakaian di luar kondisi normal</li>
+        <li>Kerusakan akibat bencana alam</li>
+    </ul>
+</div>
+
+<h4>6. Privasi dan Data Pribadi</h4>
+<ul>
+    <li>Data pribadi pelanggan akan dijaga kerahasiaannya</li>
+    <li>Data hanya digunakan untuk keperluan transaksi dan komunikasi</li>
+    <li>Kami tidak akan membagikan data kepada pihak ketiga tanpa persetujuan</li>
+    <li>Pelanggan dapat meminta penghapusan data sesuai regulasi yang berlaku</li>
+</ul>
+
+<h4>7. Force Majeure</h4>
+<p>Kami tidak bertanggung jawab atas keterlambatan atau kegagalan dalam memenuhi kewajiban yang disebabkan oleh kondisi di luar kendali kami, termasuk bencana alam, pandemi, perang, atau gangguan infrastruktur.</p>
+
+<h4>8. Hukum yang Berlaku</h4>
+<p>Syarat dan ketentuan ini tunduk pada hukum Republik Indonesia. Setiap perselisihan akan diselesaikan melalui musyawarah, atau melalui jalur hukum yang berlaku di Indonesia.</p>
+
+<div class="alert alert-info mt-4">
+    Kami berhak mengubah syarat dan ketentuan ini sewaktu-waktu. Perubahan akan diinformasikan melalui website dan notifikasi kepada pelanggan.
+</div>
+HTML;
+    }
+
 
     /**
      * Update content (About, How It Works, FAQ)
@@ -312,6 +495,22 @@ class SettingController extends Controller
                 }
                 
                 Setting::setValue('faq_items', json_encode($formattedFaqs), 'content');
+                break;
+
+            case 'refund_policy':
+                $validated = $request->validate([
+                    'refund_policy_content' => 'nullable|string',
+                ]);
+                
+                Setting::setValue('refund_policy_content', $validated['refund_policy_content'] ?? '', 'content');
+                break;
+
+            case 'terms_conditions':
+                $validated = $request->validate([
+                    'terms_conditions_content' => 'nullable|string',
+                ]);
+                
+                Setting::setValue('terms_conditions_content', $validated['terms_conditions_content'] ?? '', 'content');
                 break;
 
             default:

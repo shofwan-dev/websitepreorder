@@ -27,6 +27,8 @@ Route::get('/tentang-kami', [HomeController::class, 'about'])->name('about');
 Route::get('/cara-kerja', [HomeController::class, 'howItWorks'])->name('how-it-works');
 Route::get('/faq', [HomeController::class, 'faq'])->name('faq');
 Route::get('/kontak', [HomeController::class, 'contact'])->name('contact');
+Route::get('/refund-policy', [HomeController::class, 'refundPolicy'])->name('refund-policy');
+Route::get('/terms-and-conditions', [HomeController::class, 'termsAndConditions'])->name('terms-conditions');
 
 // Product detail (public)
 Route::get('/produk/{product}', [HomeController::class, 'productDetail'])->name('product.detail');

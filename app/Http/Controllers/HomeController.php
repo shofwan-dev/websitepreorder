@@ -421,6 +421,32 @@ class HomeController extends Controller
     }
     
     /**
+     * Menampilkan halaman kebijakan refund
+     */
+    public function refundPolicy()
+    {
+        // Get refund policy from settings
+        $content = \App\Models\Setting::getValue('refund_policy_content');
+        
+        return view('refund-policy', [
+            'content' => $content
+        ]);
+    }
+    
+    /**
+     * Menampilkan halaman syarat dan ketentuan
+     */
+    public function termsAndConditions()
+    {
+        // Get terms and conditions from settings
+        $content = \App\Models\Setting::getValue('terms_conditions_content');
+        
+        return view('terms-conditions', [
+            'content' => $content
+        ]);
+    }
+    
+    /**
      * Menampilkan halaman detail produk
      */
     public function productDetail(Product $product)

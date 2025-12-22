@@ -14,7 +14,7 @@
     <h1 class="page-title">
         <i class="fas fa-file-alt me-2"></i>Kelola Konten Website
     </h1>
-    <p class="text-muted">Edit konten halaman Tentang, Cara Kerja, dan FAQ</p>
+    <p class="text-muted">Edit konten halaman Tentang, Cara Kerja, FAQ, Refund Policy, dan Syarat & Ketentuan</p>
 </div>
 
 <!-- Tab Navigation -->
@@ -32,6 +32,16 @@
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="faq-tab" data-bs-toggle="tab" data-bs-target="#faq" type="button">
             <i class="fas fa-question-circle me-2"></i>FAQ
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="refund-tab" data-bs-toggle="tab" data-bs-target="#refund" type="button">
+            <i class="fas fa-undo-alt me-2"></i>Refund Policy
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="terms-tab" data-bs-toggle="tab" data-bs-target="#terms" type="button">
+            <i class="fas fa-file-contract me-2"></i>Syarat & Ketentuan
         </button>
     </li>
 </ul>
@@ -211,6 +221,84 @@
             </div>
         </div>
     </div>
+
+    <!-- Refund Policy Tab -->
+    <div class="tab-pane fade" id="refund" role="tabpanel">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-undo-alt me-2"></i>Konten Kebijakan Refund
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Info:</strong> Halaman ini penting untuk verifikasi payment gateway. Pastikan konten mencakup ketentuan pembatalan, pengembalian dana, dan kondisi khusus.
+                </div>
+                
+                <form action="{{ route('admin.settings.content.update') }}" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" name="section" value="refund_policy">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Konten Kebijakan Refund</label>
+                        <textarea class="form-control tinymce-editor summernote-editor" name="refund_policy_content" rows="20">{!! $settings['refund_policy_content'] ?? '' !!}</textarea>
+                        <div class="form-text">
+                            <i class="fas fa-lightbulb me-1"></i>
+                            Konten default sudah generic dan siap digunakan. Edit sesuai kebutuhan bisnis Anda. Gunakan toolbar untuk formatting (Bold, List, Heading, dll).
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Simpan Perubahan
+                    </button>
+                    <a href="{{ route('refund-policy') }}" target="_blank" class="btn btn-outline-secondary">
+                        <i class="fas fa-external-link-alt me-2"></i>Preview Halaman
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Terms & Conditions Tab -->
+    <div class="tab-pane fade" id="terms" role="tabpanel">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-file-contract me-2"></i>Konten Syarat & Ketentuan
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Info:</strong> Halaman ini penting untuk verifikasi payment gateway. Pastikan konten mencakup ketentuan umum, sistem PO, pembayaran, pengiriman, garansi, dan hukum yang berlaku.
+                </div>
+                
+                <form action="{{ route('admin.settings.content.update') }}" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" name="section" value="terms_conditions">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Konten Syarat & Ketentuan</label>
+                        <textarea class="form-control tinymce-editor summernote-editor" name="terms_conditions_content" rows="20">{!! $settings['terms_conditions_content'] ?? '' !!}</textarea>
+                        <div class="form-text">
+                            <i class="fas fa-lightbulb me-1"></i>
+                            Konten default sudah generic dan siap digunakan. Edit sesuai kebutuhan bisnis Anda. Gunakan toolbar untuk formatting (Bold, List, Heading, dll).
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Simpan Perubahan
+                    </button>
+                    <a href="{{ route('terms-conditions') }}" target="_blank" class="btn btn-outline-secondary">
+                        <i class="fas fa-external-link-alt me-2"></i>Preview Halaman
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection
 
@@ -302,5 +390,50 @@ function updateFaqNumbers() {
         item.querySelector('h6').textContent = `FAQ ${index + 1}`;
     });
 }
+
+// Initialize Summernote WYSIWYG Editor (Free, no API key needed)
+document.addEventListener('DOMContentLoaded', function() {
+    // Load Summernote CSS dan JS dari CDN
+    const summernoteCss = document.createElement('link');
+    summernoteCss.rel = 'stylesheet';
+    summernoteCss.href = 'https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.css';
+    document.head.appendChild(summernoteCss);
+    
+    const summernoteJs = document.createElement('script');
+    summernoteJs.src = 'https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.js';
+    summernoteJs.onload = function() {
+        // Initialize Summernote setelah library loaded
+        $('.tinymce-editor').summernote({
+            height: 500,
+            toolbar: [
+                ['style', ['style']],
+                ['font', ['bold', 'italic', 'underline', 'clear']],
+                ['fontname', ['fontname']],
+                ['color', ['color']],
+                ['para', ['ul', 'ol', 'paragraph']],
+                ['table', ['table']],
+                ['insert', ['link']],
+                ['view', ['fullscreen', 'codeview', 'help']]
+            ],
+            styleTags: [
+                'p',
+                { title: 'Heading 4', tag: 'h4', className: 'fw-bold mb-4', value: 'h4' },
+                { title: 'Heading 5', tag: 'h5', className: 'fw-semibold mb-3', value: 'h5' },
+                { title: 'Heading 6', tag: 'h6', className: 'fw-semibold', value: 'h6' }
+            ],
+            popover: {
+                image: [],
+                link: [],
+                air: []
+            },
+            callbacks: {
+                onInit: function() {
+                    console.log('Summernote initialized successfully');
+                }
+            }
+        });
+    };
+    document.head.appendChild(summernoteJs);
+});
 </script>
 @endpush
