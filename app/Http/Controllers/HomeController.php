@@ -308,82 +308,100 @@ class HomeController extends Controller
      */
     public function howItWorks()
     {
-        $steps = [
-            [
-                'number' => 1,
-                'title' => 'Ikut Pre-Order',
-                'description' => 'Pilih kaligrafi yang Anda suka dan ikut pre-order dengan klik tombol "Ikut PO"',
-                'icon' => 'fas fa-cart-plus'
-            ],
-            [
-                'number' => 2,
-                'title' => 'Tunggu Kuota Terpenuhi',
-                'description' => 'Produksi akan dimulai setelah kuota minimal (misal: 10 pemesan) terpenuhi',
-                'icon' => 'fas fa-users'
-            ],
-            [
-                'number' => 3,
-                'title' => 'Proses Produksi',
-                'description' => 'Pengrajin kami akan membuat kaligrafi dengan ketelitian dan doa',
-                'icon' => 'fas fa-hammer'
-            ],
-            [
-                'number' => 4,
-                'title' => 'Terima Notifikasi',
-                'description' => 'Anda akan mendapat update via WhatsApp di setiap tahap produksi',
-                'icon' => 'fas fa-bell'
-            ],
-            [
-                'number' => 5,
-                'title' => 'Barang Dikirim',
-                'description' => 'Kaligrafi dikirim dengan pengemasan eksklusif dan aman',
-                'icon' => 'fas fa-shipping-fast'
-            ],
-            [
-                'number' => 6,
-                'title' => 'Terima & Nikmati',
-                'description' => 'Kaligrafi lampu siap menghiasi rumah dengan cahaya yang menenangkan',
-                'icon' => 'fas fa-home'
-            ]
-        ];
+        // Try to get steps from settings first
+        $stepsJson = \App\Models\Setting::getValue('how_it_works_steps');
+        
+        if ($stepsJson) {
+            $steps = json_decode($stepsJson, true);
+        } else {
+            // Fallback to default steps
+            $steps = [
+                [
+                    'number' => 1,
+                    'title' => 'Ikut Pre-Order',
+                    'description' => 'Pilih kaligrafi yang Anda suka dan ikut pre-order dengan klik tombol "Ikut PO"',
+                    'icon' => 'fas fa-cart-plus'
+                ],
+                [
+                    'number' => 2,
+                    'title' => 'Tunggu Kuota Terpenuhi',
+                    'description' => 'Produksi akan dimulai setelah kuota minimal (misal: 10 pemesan) terpenuhi',
+                    'icon' => 'fas fa-users'
+                ],
+                [
+                    'number' => 3,
+                    'title' => 'Proses Produksi',
+                    'description' => 'Pengrajin kami akan membuat kaligrafi dengan ketelitian dan doa',
+                    'icon' => 'fas fa-hammer'
+                ],
+                [
+                    'number' => 4,
+                    'title' => 'Terima Notifikasi',
+                    'description' => 'Anda akan mendapat update via WhatsApp di setiap tahap produksi',
+                    'icon' => 'fas fa-bell'
+                ],
+                [
+                    'number' => 5,
+                    'title' => 'Barang Dikirim',
+                    'description' => 'Kaligrafi dikirim dengan pengemasan eksklusif dan aman',
+                    'icon' => 'fas fa-shipping-fast'
+                ],
+                [
+                    'number' => 6,
+                    'title' => 'Terima & Nikmati',
+                    'description' => 'Kaligrafi lampu siap menghiasi rumah dengan cahaya yang menenangkan',
+                    'icon' => 'fas fa-home'
+                ]
+            ];
+        }
         
         return view('how-it-works', compact('steps'));
     }
+
     
     /**
      * Menampilkan halaman FAQ
      */
     public function faq()
     {
-        $faqs = [
-            [
-                'question' => 'Apa itu Pre-Order (PO)?',
-                'answer' => 'Pre-Order adalah sistem pemesanan di mana produk akan diproduksi setelah mencapai kuota minimal pemesan. Ini memastikan kualitas produksi tetap terjaga dan menghindari overproduksi.'
-            ],
-            [
-                'question' => 'Berapa lama waktu produksi?',
-                'answer' => 'Setelah kuota terpenuhi, proses produksi membutuhkan 7-10 hari kerja ditambah 2-5 hari untuk pengiriman. Total estimasi 9-15 hari kerja.'
-            ],
-            [
-                'question' => 'Apakah bisa request desain custom?',
-                'answer' => 'Ya, untuk batch tertentu kami membuka customisasi. Silakan chat admin melalui WhatsApp untuk konsultasi desain.'
-            ],
-            [
-                'question' => 'Bagaimana sistem pembayarannya?',
-                'answer' => 'Pembayaran dilakukan melalui iPaymu yang aman dan terpercaya. Setelah pembayaran diverifikasi, nama Anda akan muncul di daftar PO.'
-            ],
-            [
-                'question' => 'Apakah ada garansi?',
-                'answer' => 'Ya, semua produk kami bergaransi 1 tahun untuk kerusakan non-kecelakaan. Untuk klaim garansi, silakan hubungi admin.'
-            ],
-            [
-                'question' => 'Bisa dikirim ke mana saja?',
-                'answer' => 'Kami bisa kirim ke seluruh Indonesia via ekspedisi terpercaya. Biaya pengiriman disesuaikan dengan kota tujuan.'
-            ]
-        ];
+        // Try to get FAQs from settings first
+        $faqsJson = \App\Models\Setting::getValue('faq_items');
+        
+        if ($faqsJson) {
+            $faqs = json_decode($faqsJson, true);
+        } else {
+            // Fallback to default FAQs
+            $faqs = [
+                [
+                    'question' => 'Apa itu Pre-Order (PO)?',
+                    'answer' => 'Pre-Order adalah sistem pemesanan di mana produk akan diproduksi setelah mencapai kuota minimal pemesan. Ini memastikan kualitas produksi tetap terjaga dan menghindari overproduksi.'
+                ],
+                [
+                    'question' => 'Berapa lama waktu produksi?',
+                    'answer' => 'Setelah kuota terpenuhi, proses produksi membutuhkan 7-10 hari kerja ditambah 2-5 hari untuk pengiriman. Total estimasi 9-15 hari kerja.'
+                ],
+                [
+                    'question' => 'Apakah bisa request desain custom?',
+                    'answer' => 'Ya, untuk batch tertentu kami membuka customisasi. Silakan chat admin melalui WhatsApp untuk konsultasi desain.'
+                ],
+                [
+                    'question' => 'Bagaimana sistem pembayarannya?',
+                    'answer' => 'Pembayaran dilakukan melalui iPaymu yang aman dan terpercaya. Setelah pembayaran diverifikasi, nama Anda akan muncul di daftar PO.'
+                ],
+                [
+                    'question' => 'Apakah ada garansi?',
+                    'answer' => 'Ya, semua produk kami bergaransi 1 tahun untuk kerusakan non-kecelakaan. Untuk klaim garansi, silakan hubungi admin.'
+                ],
+                [
+                    'question' => 'Bisa dikirim ke mana saja?',
+                    'answer' => 'Kami bisa kirim ke seluruh Indonesia via ekspedisi terpercaya. Biaya pengiriman disesuaikan dengan kota tujuan.'
+                ]
+            ];
+        }
         
         return view('faq', compact('faqs'));
     }
+
     
     /**
      * Menampilkan halaman kontak

@@ -54,6 +54,21 @@
             </div>
         </a>
     </div>
+    
+    <div class="col-md-6 col-lg-4">
+        <a href="{{ route('admin.settings.content') }}" class="text-decoration-none">
+            <div class="card h-100 border-0 shadow-sm hover-lift">
+                <div class="card-body text-center p-4">
+                    <div class="rounded-circle bg-warning bg-opacity-10 d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 80px; height: 80px;">
+                        <i class="fas fa-file-alt fa-2x text-warning"></i>
+                    </div>
+                    <h5 class="card-title">Konten Halaman</h5>
+                    <p class="card-text text-muted">Kelola konten Tentang, Cara Kerja, dan FAQ.</p>
+                </div>
+            </div>
+        </a>
+    </div>
 </div>
 
 @push('styles')

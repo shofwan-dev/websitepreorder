@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Masuk - PO Kaligrafi Lampu')
+@section('title', 'Masuk - ' . ($site_settings['site_name'] ?? 'PO Kaligrafi Lampu'))
 
 @section('content')
 <div class="min-vh-100 d-flex align-items-center" style="background: linear-gradient(135deg, #fef9e7 0%, #ffffff 100%);">

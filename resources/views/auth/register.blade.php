@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Daftar - PO Kaligrafi Lampu')
+@section('title', 'Daftar - ' . ($site_settings['site_name'] ?? 'PO Kaligrafi Lampu'))
 
 @section('content')
 <div class="min-h-screen bg-gradient-to-b from-warm-gold-50 to-white">

@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Tentang Kami - PO Kaligrafi Lampu')
+@section('title', 'Tentang Kami - ' . ($site_settings['site_name'] ?? 'PO Kaligrafi Lampu'))
 
 @section('content')
 <div class="container py-5">
-    <h1 class="mb-4">Tentang PO Kaligrafi Lampu</h1>
+    <h1 class="mb-4">Tentang {{ $site_settings['site_name'] ?? 'PO Kaligrafi Lampu' }}</h1>
     
     <div class="row">
         <div class="col-md-8">

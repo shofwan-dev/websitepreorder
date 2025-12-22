@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'PO Kaligrafi Lampu - Beranda')
+@section('title', ($site_settings['site_name'] ?? 'PO Kaligrafi Lampu') . ' - Beranda')
 
 @push('styles')
 <!-- Swiper CSS -->

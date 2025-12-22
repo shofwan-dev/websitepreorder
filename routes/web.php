@@ -197,6 +197,9 @@ Route::middleware(['auth', 'role:admin,manager'])->prefix('admin')->name('admin.
         
         Route::get('/whatsapp', [AdminSettingController::class, 'whatsapp'])->name('whatsapp');
         Route::put('/whatsapp', [AdminSettingController::class, 'updateWhatsapp'])->name('whatsapp.update');
+        
+        Route::get('/content', [AdminSettingController::class, 'content'])->name('content');
+        Route::put('/content', [AdminSettingController::class, 'updateContent'])->name('content.update');
     });
 });
 

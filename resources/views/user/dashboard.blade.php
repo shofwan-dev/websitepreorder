@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard - PO Kaligrafi')
+@section('title', 'Dashboard - ' . ($site_settings['site_name'] ?? 'PO Kaligrafi'))
 
 @section('content')
 <div class="min-vh-100 py-4" style="background: linear-gradient(135deg, #fef9e7 0%, #ffffff 100%);">

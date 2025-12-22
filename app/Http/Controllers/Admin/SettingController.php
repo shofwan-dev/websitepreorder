@@ -238,4 +238,76 @@ class SettingController extends Controller
 
         file_put_contents($envFile, $envContent);
     }
+
+    /**
+     * Display content management page
+     */
+    public function content()
+    {
+        $settings = Setting::whereIn('group', ['content', 'website'])->pluck('value', 'key')->toArray();
+        
+        return view('admin.settings.content', [
+            'settings' => $settings
+        ]);
+    }
+
+    /**
+     * Update content (About, How It Works, FAQ)
+     */
+    public function updateContent(Request $request)
+    {
+        $section = $request->input('section');
+
+        switch ($section) {
+            case 'about':
+                $validated = $request->validate([
+                    'about_title' => 'nullable|string|max:255',
+                    'about_description' => 'nullable|string',
+                    'about_vision' => 'nullable|string',
+                    'about_mission' => 'nullable|string',
+                ]);
+
+                foreach ($validated as $key => $value) {
+                    Setting::setValue($key, $value ?? '', 'content');
+                }
+                break;
+
+            case 'how_it_works':
+                $steps = $request->input('steps', []);
+                
+                // Reindex and add number field
+                $formattedSteps = [];
+                foreach (array_values($steps) as $index => $step) {
+                    $formattedSteps[] = [
+                        'number' => $index + 1,
+                        'title' => $step['title'] ?? '',
+                        'description' => $step['description'] ?? '',
+                        'icon' => $step['icon'] ?? 'fas fa-star'
+                    ];
+                }
+                
+                Setting::setValue('how_it_works_steps', json_encode($formattedSteps), 'content');
+                break;
+
+            case 'faq':
+                $faqs = $request->input('faqs', []);
+                
+                // Reindex FAQ array
+                $formattedFaqs = [];
+                foreach (array_values($faqs) as $faq) {
+                    $formattedFaqs[] = [
+                        'question' => $faq['question'] ?? '',
+                        'answer' => $faq['answer'] ?? ''
+                    ];
+                }
+                
+                Setting::setValue('faq_items', json_encode($formattedFaqs), 'content');
+                break;
+
+            default:
+                return back()->withErrors(['section' => 'Invalid section']);
+        }
+
+        return back()->with('success', 'Konten berhasil diperbarui!');
+    }
 }

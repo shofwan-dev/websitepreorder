@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', $product->name . ' - PO Kaligrafi Lampu')
+@section('title', $product->name . ' - ' . ($site_settings['site_name'] ?? 'PO Kaligrafi Lampu'))
 
 @section('content')
 <div class="container py-5">
