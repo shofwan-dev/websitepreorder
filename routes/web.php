@@ -6,6 +6,7 @@ use App\Services\WhatsAppService;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProductionManagerController;
+use App\Http\Controllers\SitemapController;
 
 // Admin Controllers
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
@@ -22,6 +23,10 @@ use App\Http\Controllers\User\OrderController as UserOrderController;
 // PUBLIC ROUTES (Tanpa Authentication)
 // ============================================================================
 
+// SEO Routes
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+
+// Public Pages
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/tentang-kami', [HomeController::class, 'about'])->name('about');
 Route::get('/cara-kerja', [HomeController::class, 'howItWorks'])->name('how-it-works');
@@ -203,6 +208,9 @@ Route::middleware(['auth', 'role:admin,manager'])->prefix('admin')->name('admin.
         
         Route::get('/content', [AdminSettingController::class, 'content'])->name('content');
         Route::put('/content', [AdminSettingController::class, 'updateContent'])->name('content.update');
+        
+        Route::get('/seo', [AdminSettingController::class, 'seo'])->name('seo');
+        Route::put('/seo', [AdminSettingController::class, 'updateSeo'])->name('seo.update');
     });
 });
 

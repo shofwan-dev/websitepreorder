@@ -249,6 +249,93 @@ class SettingController extends Controller
         file_put_contents($envFile, $envContent);
     }
 
+    /**
+     * Display SEO settings page
+     */
+    public function seo()
+    {
+        $settings = Setting::getGroup('seo');
+        
+        return view('admin.settings.seo', [
+            'settings' => $settings
+        ]);
+    }
+
+    /**
+     * Update SEO settings
+     */
+    public function updateSeo(Request $request)
+    {
+        $validated = $request->validate([
+            'seo_title' => ['nullable', 'string', 'max:60'],
+            'seo_description' => ['nullable', 'string', 'max:160'],
+            'seo_keywords' => ['nullable', 'string', 'max:500'],
+            'seo_author' => ['nullable', 'string', 'max:100'],
+            'og_title' => ['nullable', 'string', 'max:100'],
+            'og_description' => ['nullable', 'string', 'max:200'],
+            'og_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'twitter_title' => ['nullable', 'string', 'max:100'],
+            'twitter_description' => ['nullable', 'string', 'max:200'],
+            'google_analytics' => ['nullable', 'string', 'max:50'],
+            'google_search_console' => ['nullable', 'string', 'max:100'],
+            'seo_noindex' => ['nullable', 'boolean'],
+        ]);
+
+        // Save text settings
+        Setting::setValue('seo_title', $validated['seo_title'] ?? '', 'seo');
+        Setting::setValue('seo_description', $validated['seo_description'] ?? '', 'seo');
+        Setting::setValue('seo_keywords', $validated['seo_keywords'] ?? '', 'seo');
+        Setting::setValue('seo_author', $validated['seo_author'] ?? '', 'seo');
+        Setting::setValue('og_title', $validated['og_title'] ?? '', 'seo');
+        Setting::setValue('og_description', $validated['og_description'] ?? '', 'seo');
+        Setting::setValue('twitter_title', $validated['twitter_title'] ?? '', 'seo');
+        Setting::setValue('twitter_description', $validated['twitter_description'] ?? '', 'seo');
+        Setting::setValue('google_analytics', $validated['google_analytics'] ?? '', 'seo');
+        Setting::setValue('google_search_console', $validated['google_search_console'] ?? '', 'seo');
+        Setting::setValue('seo_noindex', $request->has('seo_noindex') ? '1' : '0', 'seo');
+
+        // Handle OG image upload
+        if ($request->hasFile('og_image')) {
+            $image = $request->file('og_image');
+            
+            if ($image->isValid()) {
+                try {
+                    $filename = 'og_image_' . time() . '.' . $image->getClientOriginalExtension();
+                    $path = 'seo/' . $filename;
+                    
+                    // Store image
+                    $fileContent = file_get_contents($image->getPathname());
+                    $stored = \Storage::disk('public')->put($path, $fileContent);
+                    
+                    if ($stored) {
+                        // Delete old image if exists
+                        $oldImage = Setting::getValue('og_image', 'seo');
+                        if ($oldImage && \Storage::disk('public')->exists($oldImage)) {
+                            \Storage::disk('public')->delete($oldImage);
+                        }
+                        
+                        Setting::setValue('og_image', $path, 'seo');
+                        \Log::info('OG Image uploaded successfully', ['path' => $path]);
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('OG Image upload failed: ' . $e->getMessage());
+                    return back()->withErrors(['og_image' => 'Gagal upload gambar: ' . $e->getMessage()]);
+                }
+            }
+        }
+
+        // Handle OG image removal
+        if ($request->has('remove_og_image') && $request->remove_og_image == '1') {
+            $oldImage = Setting::getValue('og_image', 'seo');
+            if ($oldImage && \Storage::disk('public')->exists($oldImage)) {
+                \Storage::disk('public')->delete($oldImage);
+            }
+            Setting::setValue('og_image', '', 'seo');
+        }
+
+        return back()->with('success', 'Pengaturan SEO berhasil disimpan.');
+    }
+
 
     /**
      * Display content management page

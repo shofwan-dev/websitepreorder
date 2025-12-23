@@ -3,10 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>@yield('title', $site_settings['site_name'] ?? 'PO Kaligrafi Lampu')</title>
+    
+    {{-- Primary Meta Tags --}}
+    <title>@yield('title', ($seo_settings['seo_title'] ?? ($site_settings['site_name'] ?? 'PO Kaligrafi Lampu') . ' - ' . ($site_settings['tagline'] ?? 'Pre-Order Kaligrafi Lampu Islami')))</title>
+    <meta name="title" content="@yield('meta_title', ($seo_settings['seo_title'] ?? ($site_settings['site_name'] ?? 'PO Kaligrafi Lampu') . ' - ' . ($site_settings['tagline'] ?? 'Pre-Order Kaligrafi Lampu Islami')))">
+    <meta name="description" content="@yield('meta_description', ($seo_settings['seo_description'] ?? $site_settings['tagline'] ?? 'Menghadirkan keindahan kaligrafi islami dalam setiap rumah Muslim. Pre-order kaligrafi lampu dengan harga terjangkau dan kualitas terbaik.'))">
+    <meta name="keywords" content="@yield('meta_keywords', ($seo_settings['seo_keywords'] ?? 'kaligrafi lampu, pre order kaligrafi, lampu islami, dekorasi islami, kaligrafi murah, lampu kaligrafi, dekorasi muslim, kaligrafi arab, islamic decor'))">
+    <meta name="author" content="{{ $seo_settings['seo_author'] ?? $site_settings['site_name'] ?? 'PO Kaligrafi Lampu' }}">
+    <meta name="robots" content="{{ !empty($seo_settings['seo_noindex']) && $seo_settings['seo_noindex'] == '1' ? 'noindex, nofollow' : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' }}">
+    <meta name="googlebot" content="{{ !empty($seo_settings['seo_noindex']) && $seo_settings['seo_noindex'] == '1' ? 'noindex, nofollow' : 'index, follow' }}">
+    
+    {{-- Google Search Console Verification --}}
+    @if(!empty($seo_settings['google_search_console'] ?? ''))
+    <meta name="google-site-verification" content="{{ $seo_settings['google_search_console'] }}">
+    @endif
+    
+    {{-- Canonical URL --}}
+    <link rel="canonical" href="@yield('canonical', url()->current())">
+    
+    {{-- Favicon --}}
     @if(isset($site_settings['site_logo']) && !empty($site_settings['site_logo']))
     <link rel="icon" href="{{ asset('storage/' . $site_settings['site_logo']) }}">
+    <link rel="apple-touch-icon" href="{{ asset('storage/' . $site_settings['site_logo']) }}">
     @endif
+    
+    {{-- Open Graph Meta Tags (Facebook) --}}
+    <meta property="og:type" content="@yield('og_type', 'website')">
+    <meta property="og:site_name" content="{{ $site_settings['site_name'] ?? 'PO Kaligrafi Lampu' }}">
+    <meta property="og:title" content="@yield('og_title', ($seo_settings['og_title'] ?? ($seo_settings['seo_title'] ?? ($site_settings['site_name'] ?? 'PO Kaligrafi Lampu') . ' - ' . ($site_settings['tagline'] ?? 'Pre-Order Kaligrafi Lampu Islami'))))">
+    <meta property="og:description" content="@yield('og_description', ($seo_settings['og_description'] ?? ($seo_settings['seo_description'] ?? $site_settings['tagline'] ?? 'Menghadirkan keindahan kaligrafi islami dalam setiap rumah Muslim. Pre-order kaligrafi lampu dengan harga terjangkau dan kualitas terbaik.')))">
+    <meta property="og:url" content="@yield('og_url', url()->current())">
+    <meta property="og:image" content="@yield('og_image', asset('storage/' . ($seo_settings['og_image'] ?? $site_settings['site_logo'] ?? 'logo.png')))">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:locale" content="id_ID">
+    
+    {{-- Twitter Card Meta Tags --}}
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="@yield('twitter_title', ($seo_settings['twitter_title'] ?? ($seo_settings['seo_title'] ?? ($site_settings['site_name'] ?? 'PO Kaligrafi Lampu') . ' - ' . ($site_settings['tagline'] ?? 'Pre-Order Kaligrafi Lampu Islami'))))">
+    <meta name="twitter:description" content="@yield('twitter_description', ($seo_settings['twitter_description'] ?? ($seo_settings['seo_description'] ?? $site_settings['tagline'] ?? 'Menghadirkan keindahan kaligrafi islami dalam setiap rumah Muslim. Pre-order kaligrafi lampu dengan harga terjangkau dan kualitas terbaik.')))">
+    <meta name="twitter:image" content="@yield('twitter_image', asset('storage/' . ($seo_settings['og_image'] ?? $site_settings['site_logo'] ?? 'logo.png')))">
+    @if(!empty($site_settings['twitter'] ?? ''))
+    <meta name="twitter:site" content="@{{ ltrim($site_settings['twitter'], '@') }}">
+    <meta name="twitter:creator" content="@{{ ltrim($site_settings['twitter'], '@') }}">
+    @endif
+    
+    {{-- Additional SEO Tags --}}
+    <meta name="theme-color" content="#d4a017">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="format-detection" content="telephone=yes">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    
+    {{-- Geo Tags --}}
+    <meta name="geo.region" content="ID">
+    <meta name="geo.placename" content="{{ $site_settings['address'] ?? 'Indonesia' }}">
+    
+    {{-- Schema.org JSON-LD Structured Data --}}
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "{{ $site_settings['site_name'] ?? 'PO Kaligrafi Lampu' }}",
+        "url": "{{ url('/') }}",
+        "logo": "{{ asset('storage/' . ($site_settings['site_logo'] ?? 'logo.png')) }}",
+        "description": "{{ $site_settings['tagline'] ?? 'Menghadirkan keindahan kaligrafi islami dalam setiap rumah Muslim' }}",
+        "telephone": "{{ $site_settings['phone'] ?? '' }}",
+        "email": "{{ $site_settings['email'] ?? '' }}",
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "{{ $site_settings['address'] ?? 'Indonesia' }}",
+            "addressCountry": "ID"
+        },
+        "sameAs": [
+            @if(!empty($site_settings['instagram'] ?? ''))
+            "https://instagram.com/{{ ltrim($site_settings['instagram'], '@') }}",
+            @endif
+            @if(!empty($site_settings['facebook'] ?? ''))
+            "{{ str_contains($site_settings['facebook'], 'http') ? $site_settings['facebook'] : 'https://facebook.com/' . ltrim($site_settings['facebook'], '@') }}",
+            @endif
+            @if(!empty($site_settings['twitter'] ?? ''))
+            "https://twitter.com/{{ ltrim($site_settings['twitter'], '@') }}"
+            @endif
+        ]
+    }
+    </script>
+
+    {{-- Local Business Schema --}}
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "LocalBusiness",
+        "name": "{{ $site_settings['site_name'] ?? 'PO Kaligrafi Lampu' }}",
+        "image": "{{ asset('storage/' . ($site_settings['site_logo'] ?? 'logo.png')) }}",
+        "url": "{{ url('/') }}",
+        "telephone": "{{ $site_settings['phone'] ?? '' }}",
+        "priceRange": "$$",
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "{{ $site_settings['address'] ?? 'Indonesia' }}",
+            "addressCountry": "ID"
+        },
+        "openingHoursSpecification": {
+            "@type": "OpeningHoursSpecification",
+            "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+            "opens": "09:00",
+            "closes": "17:00"
+        }
+    }
+    </script>
+    
+    {{-- Page-specific Schema --}}
+    @stack('schema')
+    
+    {{-- Google Analytics --}}
+    @if(!empty($seo_settings['google_analytics'] ?? ''))
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ $seo_settings['google_analytics'] }}"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '{{ $seo_settings['google_analytics'] }}');
+    </script>
+    @endif
+    
+    {{-- CSS Libraries --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -658,8 +779,8 @@
                     <a href="{{ route('how-it-works') }}" class="text-white me-3">Cara Kerja</a> |
                     <a href="{{ route('faq') }}" class="text-white me-3">FAQ</a> |
                     <a href="{{ route('contact') }}" class="text-white">Kontak</a> |
-                    <a href="{{ route('refund-policy') }}" class="text-white me-3"><i class="fas fa-undo-alt me-1"></i>Refund Policy</a> |
-                    <a href="{{ route('terms-conditions') }}" class="text-white"><i class="fas fa-file-contract me-1"></i>Syarat & Ketentuan</a>
+                    <a href="{{ route('refund-policy') }}" class="text-white me-3">Refund Policy</a> |
+                    <a href="{{ route('terms-conditions') }}" class="text-white">Syarat & Ketentuan</a>
                 </p>
             </div>
         </div>

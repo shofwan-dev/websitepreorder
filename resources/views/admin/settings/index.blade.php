@@ -69,6 +69,21 @@
             </div>
         </a>
     </div>
+    
+    <div class="col-md-6 col-lg-4">
+        <a href="{{ route('admin.settings.seo') }}" class="text-decoration-none">
+            <div class="card h-100 border-0 shadow-sm hover-lift">
+                <div class="card-body text-center p-4">
+                    <div class="rounded-circle bg-info bg-opacity-10 d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 80px; height: 80px;">
+                        <i class="fas fa-search fa-2x text-info"></i>
+                    </div>
+                    <h5 class="card-title">SEO</h5>
+                    <p class="card-text text-muted">Optimasi mesin pencari dan meta tags.</p>
+                </div>
+            </div>
+        </a>
+    </div>
 </div>
 
 @push('styles')
