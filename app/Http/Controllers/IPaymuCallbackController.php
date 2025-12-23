@@ -69,6 +69,16 @@ class IPaymuCallbackController extends Controller
             // Get status from callback data
             $status = $request->input('status') ?? $request->input('Status');
             
+            // Get additional payment info
+            $paymentMethod = $request->input('payment_method');
+            $paymentChannel = $request->input('payment_channel');
+            $realTrxId = $request->input('trx_id');
+            
+            // Update transaction ID if we got the real one from callback
+            if ($realTrxId && !$order->ipaymu_transaction_id) {
+                $order->ipaymu_transaction_id = $realTrxId;
+            }
+            
             // If status not in callback, check transaction via API
             if (!$status && $transactionId) {
                 $result = $this->ipaymu->checkTransaction($transactionId);
@@ -81,47 +91,61 @@ class IPaymuCallbackController extends Controller
             Log::info('iPaymu Transaction Status', [
                 'order_id' => $order->id,
                 'transactionId' => $transactionId,
+                'realTrxId' => $realTrxId,
                 'referenceId' => $referenceId,
-                'status' => $status
+                'status' => $status,
+                'status_type' => gettype($status),
+                'payment_method' => $paymentMethod,
+                'payment_channel' => $paymentChannel,
             ]);
 
             // Update order based on status
-            // Status: 1 (Berhasil), 6 (Refund), 7 (Expired)
+            // Status can be: 
+            // String: "berhasil", "pending", "gagal", "expired"
+            // Integer: 1 (Berhasil), 0 (Pending), -2 (Expired), 6 (Refund), 7 (Expired)
             if ($status) {
-                $statusInt = (int)$status;
+                $statusLower = is_string($status) ? strtolower($status) : '';
+                $statusInt = is_numeric($status) ? (int)$status : null;
                 
-                if ($statusInt == 1) {
+                // Check for success status
+                if ($statusLower === 'berhasil' || $statusInt === 1) {
                     $order->payment_status = 'paid';
                     $order->paid_at = now();
-                    Log::info('Order paid successfully', ['order_id' => $order->id]);
+                    Log::info('Order paid successfully', [
+                        'order_id' => $order->id,
+                        'status_received' => $status
+                    ]);
                     
                     // Send WhatsApp notification - Payment Success
                     $this->sendPaymentNotification($order, 'success');
                     
-                } elseif ($statusInt == 6) {
+                } elseif ($statusLower === 'refund' || $statusInt === 6) {
                     $order->payment_status = 'refunded';
                     Log::info('Order refunded', ['order_id' => $order->id]);
                     
                     // Send WhatsApp notification - Payment Refunded
                     $this->sendPaymentNotification($order, 'refunded');
                     
-                } elseif ($statusInt == 7) {
+                } elseif ($statusLower === 'expired' || $statusInt === 7 || $statusInt === -2) {
                     $order->payment_status = 'expired';
-                    Log::info('Order expired', ['order_id' => $order->id]);
+                    Log::info('Order expired', [
+                        'order_id' => $order->id,
+                        'status_received' => $status
+                    ]);
                     
                     // Send WhatsApp notification - Payment Expired
                     $this->sendPaymentNotification($order, 'expired');
                     
-                } elseif ($statusInt == -2) {
-                    $order->payment_status = 'expired';
-                    Log::info('Order expired (status -2)', ['order_id' => $order->id]);
-                    
-                    // Send WhatsApp notification - Payment Expired
-                    $this->sendPaymentNotification($order, 'expired');
-                    
-                } elseif ($statusInt == 0) {
+                } elseif ($statusLower === 'pending' || $statusInt === 0) {
                     $order->payment_status = 'pending';
                     Log::info('Order still pending', ['order_id' => $order->id]);
+                    
+                } elseif ($statusLower === 'gagal' || $statusLower === 'failed' || $statusInt === 5) {
+                    $order->payment_status = 'failed';
+                    Log::info('Order payment failed', ['order_id' => $order->id]);
+                    
+                    // Send WhatsApp notification - Payment Failed
+                    $this->sendPaymentNotification($order, 'failed');
                 }
                 
                 $order->save();
@@ -182,20 +206,65 @@ class IPaymuCallbackController extends Controller
     public function return(Request $request)
     {
         $transactionId = $request->input('trx_id') ?? $request->input('transactionId');
+        $sessionId = $request->input('sid') ?? $request->input('session_id');
+        $status = $request->input('status') ?? $request->input('Status');
         
         Log::info('iPaymu Return URL', [
             'transactionId' => $transactionId,
+            'sessionId' => $sessionId,
+            'status' => $status,
             'all_params' => $request->all()
         ]);
 
+        // Try to find order
+        $order = null;
+        
         if ($transactionId) {
             $order = Order::where('ipaymu_transaction_id', $transactionId)->first();
-            
-            if ($order) {
-                // Redirect to order detail with success message
-                return redirect()->route('user.orders.show', $order->id)
-                    ->with('success', 'Pembayaran sedang diproses. Kami akan mengirim notifikasi jika pembayaran berhasil.');
+        }
+        
+        // If not found by transaction ID, try session ID
+        if (!$order && $sessionId) {
+            $order = Order::where('ipaymu_session_id', $sessionId)->first();
+        }
+        
+        if ($order) {
+            // Update order with transaction ID if we got it
+            if ($transactionId && $order->ipaymu_transaction_id !== $transactionId) {
+                $order->ipaymu_transaction_id = $transactionId;
+                $order->save();
             }
+            
+            // If status is provided in return URL (sandbox simulation), process it immediately
+            if ($status) {
+                $statusLower = is_string($status) ? strtolower($status) : '';
+                
+                if ($statusLower === 'berhasil' || $status == 1) {
+                    $order->payment_status = 'paid';
+                    $order->paid_at = now();
+                    $order->save();
+                    
+                    Log::info('Payment marked as paid from return URL', [
+                        'order_id' => $order->id,
+                        'status' => $status
+                    ]);
+                    
+                    // Send WhatsApp notification
+                    try {
+                        $whatsapp = app(\App\Services\WhatsAppService::class);
+                        $whatsapp->sendPaymentSuccessNotification($order);
+                    } catch (\Exception $e) {
+                        Log::error('Failed to send WhatsApp', ['error' => $e->getMessage()]);
+                    }
+                    
+                    return redirect()->route('user.orders.show', $order->id)
+                        ->with('success', 'Pembayaran berhasil! Terima kasih atas kepercayaan Anda.');
+                }
+            }
+            
+            // Redirect to order detail with pending message
+            return redirect()->route('user.orders.show', $order->id)
+                ->with('success', 'Pembayaran sedang diproses. Kami akan mengirim notifikasi jika pembayaran berhasil.');
         }
 
         // Fallback to orders list
