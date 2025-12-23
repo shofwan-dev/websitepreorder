@@ -7,6 +7,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProductionManagerController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\SalesNotificationController;
 
 // Admin Controllers
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
@@ -37,6 +38,9 @@ Route::get('/terms-and-conditions', [HomeController::class, 'termsAndConditions'
 
 // Product detail (public)
 Route::get('/produk/{product}', [HomeController::class, 'productDetail'])->name('product.detail');
+
+// API - Sales Notification
+Route::get('/api/sales-notifications', [SalesNotificationController::class, 'getRecentSales'])->name('api.sales-notifications');
 
 
 // Order tracking (public - tanpa login)

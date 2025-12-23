@@ -458,6 +458,112 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* Sales Notification Popup */
+        .sales-notification-popup {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            z-index: 1050;
+            max-width: 380px;
+            opacity: 0;
+            transform: translateX(-150%);
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            pointer-events: none;
+        }
+
+        .sales-notification-popup.show {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: auto;
+        }
+
+        .sales-notification-content {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-left: 4px solid var(--primary-gold);
+            position: relative;
+        }
+
+        .sales-notification-close {
+            position: absolute;
+            top: 5px;
+            right: 8px;
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: #999;
+            cursor: pointer;
+            transition: color 0.2s;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .sales-notification-close:hover {
+            color: #333;
+        }
+
+        .sales-notification-image {
+            width: 55px;
+            height: 55px;
+            border-radius: 12px;
+            overflow: hidden;
+            flex-shrink: 0;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            border: 2px solid #f0f0f0;
+        }
+
+        .sales-notification-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .sales-notification-text {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .sales-notification-customer {
+            font-size: 13px;
+            color: #333;
+            margin-bottom: 3px;
+        }
+
+        .sales-notification-customer strong {
+            color: var(--primary-gold);
+        }
+
+        .sales-notification-customer .text-muted {
+            font-size: 11px;
+            color: #888;
+        }
+
+        .sales-notification-product {
+            font-size: 12px;
+            color: #555;
+            margin-bottom: 3px;
+            line-height: 1.3;
+        }
+
+        .sales-notification-time {
+            font-size: 10px;
+            color: #999;
+        }
+
+        @media (max-width: 576px) {
+            .sales-notification-popup {
+                left: 15px;
+                right: 15px;
+                bottom: 15px;
+                max-width: calc(100% - 30px);
+            }
+        }
     </style>
     @stack('styles')
 </head>
@@ -593,6 +699,30 @@
     <main>
         @yield('content')
     </main>
+
+    {{-- Live Sales Notification Popup --}}
+    @if(request()->routeIs('home') || request()->routeIs('product.detail') || request()->routeIs('user.orders.*'))
+    <div id="salesNotificationPopup" class="sales-notification-popup">
+        <div class="sales-notification-content">
+            <button type="button" class="sales-notification-close" onclick="hideSalesNotification()">&times;</button>
+            <div class="sales-notification-image">
+                <img id="salesNotifImage" src="" alt="Product" onerror="this.src='https://ui-avatars.com/api/?name=Product&size=60&background=d4a017&color=fff'">
+            </div>
+            <div class="sales-notification-text">
+                <div class="sales-notification-customer">
+                    <strong id="salesNotifCustomer">Loading...</strong>
+                    <span class="text-muted" id="salesNotifCity">dari Indonesia</span>
+                </div>
+                <div class="sales-notification-product" id="salesNotifProduct">
+                    baru saja membeli produk
+                </div>
+                <div class="sales-notification-time">
+                    <i class="fas fa-clock"></i> <span id="salesNotifTime">baru saja</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 
     <!-- Footer -->
     <footer class="footer">
@@ -736,6 +866,90 @@
             });
         });
     </script>
+
+    {{-- Sales Notification Script --}}
+    @if(request()->routeIs('home') || request()->routeIs('product.detail') || request()->routeIs('user.orders.*'))
+    <script>
+        // Sales Notification System
+        let salesData = [];
+        let currentSalesIndex = 0;
+        let salesNotificationTimeout = null;
+        let salesAutoShowTimeout = null;
+
+        // Fetch sales data from API
+        async function fetchSalesNotifications() {
+            try {
+                const response = await fetch('{{ route("api.sales-notifications") }}');
+                const result = await response.json();
+                
+                if (result.success && result.data.length > 0) {
+                    salesData = result.data;
+                    // Shuffle array
+                    for (let i = salesData.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [salesData[i], salesData[j]] = [salesData[j], salesData[i]];
+                    }
+                    // Show first notification after 3 seconds
+                    setTimeout(showSalesNotification, 3000);
+                }
+            } catch (error) {
+                console.error('Failed to fetch sales notifications:', error);
+            }
+        }
+
+        // Show notification
+        function showSalesNotification() {
+            if (salesData.length === 0) return;
+            
+            const sale = salesData[currentSalesIndex];
+            const popup = document.getElementById('salesNotificationPopup');
+            
+            if (!popup) return;
+            
+            // Update content
+            document.getElementById('salesNotifImage').src = sale.product_image;
+            document.getElementById('salesNotifCustomer').textContent = sale.customer_name;
+            document.getElementById('salesNotifCity').textContent = 'dari ' + sale.city;
+            document.getElementById('salesNotifProduct').innerHTML = 'baru saja membeli <strong>' + sale.product_name.substring(0, 35) + '</strong>';
+            document.getElementById('salesNotifTime').textContent = sale.time_ago;
+            
+            // Show popup
+            popup.classList.add('show');
+            
+            // Auto hide after 5 seconds
+            clearTimeout(salesNotificationTimeout);
+            salesNotificationTimeout = setTimeout(hideSalesNotification, 5000);
+            
+            // Move to next
+            currentSalesIndex = (currentSalesIndex + 1) % salesData.length;
+            
+            // Reshuffle if we've shown all
+            if (currentSalesIndex === 0) {
+                for (let i = salesData.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [salesData[i], salesData[j]] = [salesData[j], salesData[i]];
+                }
+            }
+            
+            // Schedule next (random 10-20 seconds)
+            const nextDelay = 10000 + Math.random() * 10000;
+            clearTimeout(salesAutoShowTimeout);
+            salesAutoShowTimeout = setTimeout(showSalesNotification, nextDelay);
+        }
+
+        // Hide notification
+        function hideSalesNotification() {
+            const popup = document.getElementById('salesNotificationPopup');
+            if (popup) {
+                popup.classList.remove('show');
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', fetchSalesNotifications);
+    </script>
+    @endif
+
     @stack('scripts')
 </body>
 </html>
