@@ -184,6 +184,53 @@
                             @endif
                         </div>
 
+                        @if($order->paid_at)
+                        <div class="mb-3">
+                            <span class="text-muted small d-block mb-1">Tanggal Pembayaran</span>
+                            <strong>{{ $order->paid_at->format('d M Y, H:i') }}</strong>
+                        </div>
+                        @endif
+
+                        {{-- Payment Information Section --}}
+                        @if($order->ipaymu_transaction_id || $order->ipaymu_session_id)
+                        <div class="border-top pt-3 mt-3 mb-3">
+                            <h6 class="text-muted small mb-2">
+                                <i class="fas fa-receipt me-1"></i> Informasi Pembayaran
+                            </h6>
+                            
+                            @if($order->ipaymu_transaction_id)
+                            <div class="mb-2">
+                                <span class="text-muted small d-block">Transaction ID</span>
+                                <code class="small">{{ $order->ipaymu_transaction_id }}</code>
+                            </div>
+                            @endif
+                            
+                            @if($order->ipaymu_session_id && $order->ipaymu_session_id !== $order->ipaymu_transaction_id)
+                            <div class="mb-2">
+                                <span class="text-muted small d-block">Session ID</span>
+                                <code class="small">{{ $order->ipaymu_session_id }}</code>
+                            </div>
+                            @endif
+                            
+                            <div class="mb-2">
+                                <span class="text-muted small d-block">Merchant Ref ID</span>
+                                <code class="small">ORDER-{{ $order->id }}</code>
+                            </div>
+                            
+                            @if($order->payment_expired_at)
+                            <div class="mb-2">
+                                <span class="text-muted small d-block">Berlaku Hingga</span>
+                                <strong class="small {{ $order->payment_expired_at->isPast() ? 'text-danger' : 'text-success' }}">
+                                    {{ $order->payment_expired_at->format('d M Y, H:i') }}
+                                    @if($order->payment_expired_at->isPast())
+                                        <i class="fas fa-exclamation-circle ms-1"></i>
+                                    @endif
+                                </strong>
+                            </div>
+                            @endif
+                        </div>
+                        @endif
+
                         @if($order->payment_status !== 'paid' && $order->status !== 'cancelled')
                         
                         <!-- Payment Action Section -->
@@ -195,13 +242,6 @@
                                         <i class="fas fa-info-circle me-1"></i>
                                         Link pembayaran sudah dibuat. Klik tombol di bawah untuk melanjutkan pembayaran.
                                     </div>
-                                    
-                                    @if($order->payment_expired_at)
-                                    <div class="text-muted small mb-2">
-                                        <i class="fas fa-clock me-1"></i>
-                                        Berlaku hingga: <strong>{{ $order->payment_expired_at->format('d M Y, H:i') }}</strong>
-                                    </div>
-                                    @endif
                                     
                                     <a href="{{ $order->ipaymu_payment_url }}" 
                                        target="_blank"

@@ -223,4 +223,204 @@ class WhatsAppService
         
         return $results;
     }
+
+    /**
+     * ========================================================================
+     * PAYMENT NOTIFICATION METHODS (iPaymu Integration)
+     * ========================================================================
+     */
+
+    /**
+     * Send notification when order is created (payment pending)
+     */
+    public function sendOrderCreatedNotification($order): array
+    {
+        $customerNumber = $this->formatPhoneNumber($order->customer_phone);
+        $firstName = explode(' ', $order->customer_name)[0];
+        $productName = $order->product->name ?? 'Produk';
+        $totalAmount = number_format($order->total_amount, 0, ',', '.');
+        
+        $orderUrl = url('/my/orders/' . $order->id);
+        
+        $message = "Assalamu'alaikum *$firstName*,\n\n";
+        $message .= "Terima kasih telah melakukan Pre-Order! 🎉\n\n";
+        $message .= "📦 *Detail Pesanan*\n";
+        $message .= "━━━━━━━━━━━━━━━━\n";
+        $message .= "• Order ID: #$order->id\n";
+        $message .= "• Produk: *$productName*\n";
+        $message .= "• Jumlah: $order->quantity pcs\n";
+        $message .= "• Total: *Rp $totalAmount*\n\n";
+        $message .= "💳 *Langkah Selanjutnya:*\n";
+        $message .= "Silakan lakukan pembayaran untuk mengamankan slot PO Anda.\n\n";
+        $message .= "Klik link berikut untuk melanjutkan pembayaran:\n";
+        $message .= "$orderUrl\n\n";
+        $message .= "⏰ Selesaikan pembayaran dalam 24 jam agar pesanan tidak dibatalkan otomatis.\n\n";
+        $message .= "Jazakumullah khairan! 🙏";
+        
+        $result = $this->sendMessage($customerNumber, $message);
+        $this->logNotification($order->id, 'order_created', $message, $result['success'] ?? false);
+        
+        return $result;
+    }
+
+    /**
+     * Send payment reminder (belum bayar)
+     */
+    public function sendPaymentReminderNotification($order): array
+    {
+        $customerNumber = $this->formatPhoneNumber($order->customer_phone);
+        $firstName = explode(' ', $order->customer_name)[0];
+        $productName = $order->product->name ?? 'Produk';
+        $totalAmount = number_format($order->total_amount, 0, ',', '.');
+        
+        $orderUrl = url('/my/orders/' . $order->id);
+        
+        $message = "Halo *$firstName*,\n\n";
+        $message .= "🔔 *Pengingat Pembayaran*\n\n";
+        $message .= "Kami menunggu pembayaran untuk:\n";
+        $message .= "• Order ID: #$order->id\n";
+        $message .= "• Produk: *$productName*\n";
+        $message .= "• Total: *Rp $totalAmount*\n\n";
+        $message .= "Yuk selesaikan pembayaran sekarang:\n";
+        $message .= "$orderUrl\n\n";
+        $message .= "Slot PO terbatas, jangan sampai kehabisan! ⏰\n\n";
+        $message .= "Butuh bantuan? Chat admin kami.";
+        
+        $result = $this->sendMessage($customerNumber, $message);
+        $this->logNotification($order->id, 'payment_reminder', $message, $result['success'] ?? false);
+        
+        return $result;
+    }
+
+    /**
+     * Send notification when payment is successful
+     */
+    public function sendPaymentSuccessNotification($order): array
+    {
+        $customerNumber = $this->formatPhoneNumber($order->customer_phone);
+        $firstName = explode(' ', $order->customer_name)[0];
+        $productName = $order->product->name ?? 'Produk';
+        $totalAmount = number_format($order->total_amount, 0, ',', '.');
+        
+        $message = "Alhamdulillah *$firstName*! 🎊\n\n";
+        $message .= "✅ *PEMBAYARAN BERHASIL*\n";
+        $message .= "━━━━━━━━━━━━━━━━\n\n";
+        $message .= "Pembayaran Anda untuk *$productName* telah kami terima dengan total *Rp $totalAmount*.\n\n";
+        $message .= "📋 *Status Pesanan:*\n";
+        $message .= "Pesanan Anda sedang kami proses. Anda akan menerima update melalui WhatsApp saat:\n";
+        $message .= "• Kuota PO terpenuhi\n";
+        $message .= "• Produksi dimulai\n";
+        $message .= "• Produk dalam pengiriman\n\n";
+        $message .= "🎯 *Timeline Estimasi:*\n";
+        $message .= "• Menunggu kuota: 7-14 hari\n";
+        $message .= "• Produksi: 7-10 hari\n";
+        $message .= "• Pengiriman: 2-5 hari\n\n";
+        $message .= "Track pesanan Anda:\n";
+        $message .= url('/my/orders/' . $order->id) . "\n\n";
+        $message .= "Jazakumullah khairan atas kepercayaannya! 🙏✨\n\n";
+        $message .= "_Kami akan bekerja dengan sepenuh hati untuk produk terbaik Anda._";
+        
+        $result = $this->sendMessage($customerNumber, $message);
+        $this->logNotification($order->id, 'payment_success', $message, $result['success'] ?? false);
+        
+        return $result;
+    }
+
+    /**
+     * Send notification when payment failed
+     */
+    public function sendPaymentFailedNotification($order, $reason = ''): array
+    {
+        $customerNumber = $this->formatPhoneNumber($order->customer_phone);
+        $firstName = explode(' ', $order->customer_name)[0];
+        $productName = $order->product->name ?? 'Produk';
+        
+        $orderUrl = url('/my/orders/' . $order->id);
+        
+        $message = "Halo *$firstName*,\n\n";
+        $message .= "❌ *Pembayaran Gagal*\n\n";
+        $message .= "Pembayaran untuk *$productName* (Order #$order->id) gagal diproses.\n\n";
+        
+        if ($reason) {
+            $message .= "📌 Alasan: $reason\n\n";
+        }
+        
+        $message .= "Silakan coba lagi dengan mengklik link berikut:\n";
+        $message .= "$orderUrl\n\n";
+        $message .= "Atau hubungi admin kami untuk bantuan lebih lanjut.\n\n";
+        $message .= "Terima kasih! 🙏";
+        
+        $result = $this->sendMessage($customerNumber, $message);
+        $this->logNotification($order->id, 'payment_failed', $message, $result['success'] ?? false);
+        
+        return $result;
+    }
+
+    /**
+     * Send notification when payment expired
+     */
+    public function sendPaymentExpiredNotification($order): array
+    {
+        $customerNumber = $this->formatPhoneNumber($order->customer_phone);
+        $firstName = explode(' ', $order->customer_name)[0];
+        $productName = $order->product->name ?? 'Produk';
+        
+        $message = "Halo *$firstName*,\n\n";
+        $message .= "⏰ *Link Pembayaran Expired*\n\n";
+        $message .= "Link pembayaran untuk *$productName* (Order #$order->id) telah expired.\n\n";
+        $message .= "📌 *Tindakan yang diperlukan:*\n";
+        $message .= "Silakan hubungi admin kami untuk membuat link pembayaran baru atau melakukan order ulang.\n\n";
+        $message .= "Contact Admin:\n";
+        $message .= url('/kontak') . "\n\n";
+        $message .= "Mohon maaf atas ketidaknyamanannya. 🙏";
+        
+        $result = $this->sendMessage($customerNumber, $message);
+        $this->logNotification($order->id, 'payment_expired', $message, $result['success'] ?? false);
+        
+        return $result;
+    }
+
+    /**
+     * Send notification when payment is refunded
+     */
+    public function sendPaymentRefundedNotification($order): array
+    {
+        $customerNumber = $this->formatPhoneNumber($order->customer_phone);
+        $firstName = explode(' ', $order->customer_name)[0];
+        $productName = $order->product->name ?? 'Produk';
+        $totalAmount = number_format($order->total_amount, 0, ',', '.');
+        
+        $message = "Halo *$firstName*,\n\n";
+        $message .= "💰 *Status Refund*\n\n";
+        $message .= "Pembayaran untuk *$productName* (Order #$order->id) telah di-refund sebesar *Rp $totalAmount*.\n\n";
+        $message .= "Dana akan kembali ke rekening/metode pembayaran Anda dalam 3-7 hari kerja.\n\n";
+        $message .= "Jika ada pertanyaan, silakan hubungi admin kami.\n\n";
+        $message .= "Terima kasih atas pengertiannya. 🙏";
+        
+        $result = $this->sendMessage($customerNumber, $message);
+        $this->logNotification($order->id, 'payment_refunded', $message, $result['success'] ?? false);
+        
+        return $result;
+    }
+
+    /**
+     * Send notification when order is confirmed (after payment)
+     */
+    public function sendOrderConfirmedNotification($order): array
+    {
+        $customerNumber = $this->formatPhoneNumber($order->customer_phone);
+        $firstName = explode(' ', $order->customer_name)[0];
+        $productName = $order->product->name ?? 'Produk';
+        
+        $message = "Barakallahu fiik *$firstName*! ✨\n\n";
+        $message .= "✅ *Pesanan Dikonfirmasi*\n\n";
+        $message .= "Order #$order->id untuk *$productName* telah dikonfirmasi oleh tim kami.\n\n";
+        $message .= "Kami akan update progress melalui WhatsApp.\n\n";
+        $message .= "Stay tuned! 🎯";
+        
+        $result = $this->sendMessage($customerNumber, $message);
+        $this->logNotification($order->id, 'order_confirmed', $message, $result['success'] ?? false);
+        
+        return $result;
+    }
 }

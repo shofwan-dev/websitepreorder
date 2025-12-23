@@ -85,6 +85,20 @@ class OrderController extends Controller
         // TODO: Update product quota jika kolom current_quota sudah ditambahkan
         // $product->increment('current_quota', $validated['quantity']);
 
+        // Send WhatsApp notification to customer
+        try {
+            $whatsapp = app(\App\Services\WhatsAppService::class);
+            $whatsapp->sendOrderCreatedNotification($order);
+            
+            \Log::info('WhatsApp notification sent for new order', ['order_id' => $order->id]);
+        } catch (\Exception $e) {
+            // Log error but don't stop the order creation process
+            \Log::error('Failed to send WhatsApp notification for order creation', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+
         return redirect()
             ->route('user.orders.show', $order)
             ->with('success', 'Order berhasil dibuat! Silakan lakukan pembayaran.');
@@ -161,13 +175,28 @@ class OrderController extends Controller
             if ($result['success'] && isset($result['data']['Data'])) {
                 $paymentData = $result['data']['Data'];
                 
+                // iPaymu may return TransactionId or use SessionID as identifier
+                $transactionId = $paymentData['TransactionId'] ?? $paymentData['SessionID'] ?? null;
+                
+                \Log::info('Payment data received from iPaymu', [
+                    'order_id' => $order->id,
+                    'transaction_id' => $transactionId,
+                    'session_id' => $paymentData['SessionID'] ?? null,
+                    'payment_url' => $paymentData['Url'] ?? null,
+                ]);
+                
                 // Update order with payment information
                 $order->update([
-                    'ipaymu_transaction_id' => $paymentData['TransactionId'] ?? null,
+                    'ipaymu_transaction_id' => $transactionId,
                     'ipaymu_payment_url' => $paymentData['Url'] ?? null,
                     'ipaymu_session_id' => $paymentData['SessionID'] ?? null,
                     'payment_expired_at' => isset($paymentData['Expired']) ? 
                         \Carbon\Carbon::parse($paymentData['Expired']) : null,
+                ]);
+
+                \Log::info('Order updated with payment info', [
+                    'order_id' => $order->id,
+                    'ipaymu_transaction_id' => $order->ipaymu_transaction_id,
                 ]);
 
                 // Redirect to payment page
@@ -177,6 +206,11 @@ class OrderController extends Controller
             }
 
             // If payment creation failed
+            \Log::error('Payment creation failed', [
+                'order_id' => $order->id,
+                'result' => $result
+            ]);
+            
             return redirect()
                 ->route('user.orders.show', $order)
                 ->with('error', 'Gagal membuat pembayaran. ' . ($result['message'] ?? 'Silakan coba lagi.'));
