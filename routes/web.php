@@ -215,6 +215,9 @@ Route::middleware(['auth', 'role:admin,manager'])->prefix('admin')->name('admin.
         
         Route::get('/seo', [AdminSettingController::class, 'seo'])->name('seo');
         Route::put('/seo', [AdminSettingController::class, 'updateSeo'])->name('seo.update');
+        
+        Route::get('/marketing', [AdminSettingController::class, 'marketing'])->name('marketing');
+        Route::put('/marketing', [AdminSettingController::class, 'updateMarketing'])->name('marketing.update');
     });
 });
 

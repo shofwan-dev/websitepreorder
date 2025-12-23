@@ -30,6 +30,7 @@ class AppServiceProvider extends ServiceProvider
         view()->composer('*', function ($view) {
             $view->with('site_settings', \App\Models\Setting::getGroup('website'));
             $view->with('seo_settings', \App\Models\Setting::getGroup('seo'));
+            $view->with('marketing_settings', \App\Models\Setting::getGroup('marketing'));
         });
     }
 }

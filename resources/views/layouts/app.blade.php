@@ -7,6 +7,87 @@
     @if(isset($site_settings['site_logo']) && !empty($site_settings['site_logo']))
     <link rel="icon" href="{{ asset('storage/' . $site_settings['site_logo']) }}">
     @endif
+
+    {{-- Google Tag Manager (Head) --}}
+    @if(($marketing_settings['gtm_enabled'] ?? '') == '1' && !empty($marketing_settings['gtm_container_id'] ?? ''))
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','{{ $marketing_settings['gtm_container_id'] }}');</script>
+    @endif
+
+    {{-- Google Analytics 4 --}}
+    @if(($marketing_settings['google_analytics_enabled'] ?? '') == '1' && !empty($marketing_settings['google_analytics_id'] ?? ''))
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ $marketing_settings['google_analytics_id'] }}"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '{{ $marketing_settings['google_analytics_id'] }}');
+    </script>
+    @endif
+
+    {{-- Facebook Pixel --}}
+    @if(($marketing_settings['facebook_pixel_enabled'] ?? '') == '1' && !empty($marketing_settings['facebook_pixel_id'] ?? ''))
+    <script>
+        !function(f,b,e,v,n,t,s)
+        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+        n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t,s)}(window, document,'script',
+        'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', '{{ $marketing_settings['facebook_pixel_id'] }}');
+        fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+        src="https://www.facebook.com/tr?id={{ $marketing_settings['facebook_pixel_id'] }}&ev=PageView&noscript=1"/></noscript>
+    @endif
+
+    {{-- TikTok Pixel --}}
+    @if(($marketing_settings['tiktok_pixel_enabled'] ?? '') == '1' && !empty($marketing_settings['tiktok_pixel_id'] ?? ''))
+    <script>
+        !function (w, d, t) {
+            w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript",o.async=!0,o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};
+            ttq.load('{{ $marketing_settings['tiktok_pixel_id'] }}');
+            ttq.page();
+        }(window, document, 'ttq');
+    </script>
+    @endif
+
+    {{-- UTM Parameter Capture --}}
+    @if(($marketing_settings['utm_tracking_enabled'] ?? '1') == '1')
+    <script>
+        (function() {
+            var params = new URLSearchParams(window.location.search);
+            var utmParams = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
+            var hasUtm = false;
+            var utmData = {};
+            
+            utmParams.forEach(function(param) {
+                var value = params.get(param);
+                if (value) {
+                    hasUtm = true;
+                    utmData[param] = value;
+                }
+            });
+            
+            if (hasUtm) {
+                // Store in localStorage for order attribution
+                localStorage.setItem('utm_data', JSON.stringify(utmData));
+                localStorage.setItem('utm_timestamp', new Date().toISOString());
+            }
+        })();
+    </script>
+    @endif
+
+    {{-- Custom Head Scripts --}}
+    @if(!empty($marketing_settings['custom_head_scripts'] ?? ''))
+    {!! $marketing_settings['custom_head_scripts'] !!}
+    @endif
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -568,6 +649,12 @@
     @stack('styles')
 </head>
 <body>
+    {{-- Google Tag Manager (noscript) --}}
+    @if(($marketing_settings['gtm_enabled'] ?? '') == '1' && !empty($marketing_settings['gtm_container_id'] ?? ''))
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{ $marketing_settings['gtm_container_id'] }}"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    @endif
+
     <!-- Page Loader -->
     <div class="page-loader" id="pageLoader">
         <div class="loader-spinner"></div>

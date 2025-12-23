@@ -606,4 +606,62 @@ HTML;
 
         return back()->with('success', 'Konten berhasil diperbarui!');
     }
+
+    /**
+     * Display marketing & tracking settings page
+     */
+    public function marketing()
+    {
+        $marketingKeys = [
+            'facebook_pixel_id', 'facebook_pixel_enabled',
+            'gtm_container_id', 'gtm_enabled',
+            'google_analytics_id', 'google_analytics_enabled',
+            'tiktok_pixel_id', 'tiktok_pixel_enabled',
+            'utm_tracking_enabled',
+            'custom_head_scripts'
+        ];
+        
+        $marketing_settings = Setting::whereIn('key', $marketingKeys)->pluck('value', 'key')->toArray();
+        
+        return view('admin.settings.marketing', compact('marketing_settings'));
+    }
+
+    /**
+     * Update marketing & tracking settings
+     */
+    public function updateMarketing(Request $request)
+    {
+        $validated = $request->validate([
+            'facebook_pixel_id' => 'nullable|string|max:50',
+            'facebook_pixel_enabled' => 'nullable|in:0,1',
+            'gtm_container_id' => 'nullable|string|max:50',
+            'gtm_enabled' => 'nullable|in:0,1',
+            'google_analytics_id' => 'nullable|string|max:50',
+            'google_analytics_enabled' => 'nullable|in:0,1',
+            'tiktok_pixel_id' => 'nullable|string|max:50',
+            'tiktok_pixel_enabled' => 'nullable|in:0,1',
+            'utm_tracking_enabled' => 'nullable|in:0,1',
+            'custom_head_scripts' => 'nullable|string|max:10000',
+        ]);
+
+        // Save all settings
+        foreach ($validated as $key => $value) {
+            Setting::setValue($key, $value ?? '', 'marketing');
+        }
+
+        // Handle checkboxes (they don't submit when unchecked)
+        $checkboxFields = [
+            'facebook_pixel_enabled', 'gtm_enabled', 
+            'google_analytics_enabled', 'tiktok_pixel_enabled',
+            'utm_tracking_enabled'
+        ];
+        
+        foreach ($checkboxFields as $field) {
+            if (!$request->has($field)) {
+                Setting::setValue($field, '0', 'marketing');
+            }
+        }
+
+        return back()->with('success', 'Pengaturan marketing berhasil disimpan!');
+    }
 }
