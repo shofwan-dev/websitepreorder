@@ -76,12 +76,37 @@ class OrderController extends Controller
         $order->status = $validated['status'];
         $order->save();
 
-        // Send notification if status changed
+        // Send WhatsApp notification if status changed
         if ($oldStatus !== $validated['status']) {
-            // You can trigger WhatsApp notification here if needed
+            try {
+                $statusMessages = [
+                    'pending' => '⏳ Pesanan Anda sedang menunggu konfirmasi.',
+                    'confirmed' => '✅ Pesanan Anda telah dikonfirmasi dan akan segera diproses.',
+                    'processing' => '⚙️ Pesanan Anda sedang dalam proses persiapan.',
+                    'production' => '🏭 Produk Anda sedang dalam tahap produksi.',
+                    'shipping' => '🚚 Pesanan Anda sedang dalam pengiriman.',
+                    'completed' => '🎉 Pesanan Anda telah selesai. Terima kasih!',
+                    'cancelled' => '❌ Pesanan Anda telah dibatalkan.',
+                ];
+
+                $message = "*Update Status Pesanan #" . $order->id . "*\n\n";
+                $message .= "Halo *" . $order->customer_name . "*,\n\n";
+                $message .= $statusMessages[$validated['status']] ?? 'Status pesanan telah diperbarui.';
+                $message .= "\n\n*Detail Pesanan:*\n";
+                $message .= "Produk: " . $order->product->name . "\n";
+                $message .= "Jumlah: " . $order->quantity . "\n";
+                $message .= "Total: Rp " . number_format($order->total_amount, 0, ',', '.') . "\n\n";
+                $message .= "Terima kasih telah berbelanja dengan kami! 🙏";
+
+                $whatsapp = new WhatsAppService();
+                $whatsapp->sendMessage($order->customer_phone, $message);
+            } catch (\Exception $e) {
+                // Log error but don't stop the process
+                \Log::error('Failed to send WhatsApp notification: ' . $e->getMessage());
+            }
         }
 
-        return back()->with('success', 'Status order berhasil diperbarui.');
+        return back()->with('success', 'Status order berhasil diperbarui dan notifikasi telah dikirim.');
     }
 
     /**
@@ -93,10 +118,40 @@ class OrderController extends Controller
             'payment_status' => ['required', 'in:pending,paid,partial,refunded'],
         ]);
 
+        $oldPaymentStatus = $order->payment_status;
         $order->payment_status = $validated['payment_status'];
         $order->save();
 
-        return back()->with('success', 'Status pembayaran berhasil diperbarui.');
+        // Send WhatsApp notification if payment status changed
+        if ($oldPaymentStatus !== $validated['payment_status']) {
+            try {
+                $paymentMessages = [
+                    'pending' => '⏳ Menunggu pembayaran.',
+                    'partial' => '💰 Pembayaran sebagian telah diterima.',
+                    'paid' => '✅ Pembayaran telah lunas. Terima kasih!',
+                    'failed' => '❌ Pembayaran gagal. Silakan coba lagi.',
+                    'expired' => '⌛ Pembayaran telah kadaluarsa.',
+                    'refunded' => '💸 Pembayaran telah dikembalikan (refund).',
+                ];
+
+                $message = "*Update Status Pembayaran #" . $order->id . "*\n\n";
+                $message .= "Halo *" . $order->customer_name . "*,\n\n";
+                $message .= $paymentMessages[$validated['payment_status']] ?? 'Status pembayaran telah diperbarui.';
+                $message .= "\n\n*Detail Pesanan:*\n";
+                $message .= "Produk: " . $order->product->name . "\n";
+                $message .= "Total: Rp " . number_format($order->total_amount, 0, ',', '.') . "\n";
+                $message .= "Status Pembayaran: " . strtoupper($validated['payment_status']) . "\n\n";
+                $message .= "Terima kasih! 🙏";
+
+                $whatsapp = new WhatsAppService();
+                $whatsapp->sendMessage($order->customer_phone, $message);
+            } catch (\Exception $e) {
+                // Log error but don't stop the process
+                \Log::error('Failed to send WhatsApp notification: ' . $e->getMessage());
+            }
+        }
+
+        return back()->with('success', 'Status pembayaran berhasil diperbarui dan notifikasi telah dikirim.');
     }
 
     /**
