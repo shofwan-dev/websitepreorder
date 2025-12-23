@@ -88,6 +88,7 @@ Route::middleware(['auth'])->prefix('my')->name('user.')->group(function () {
         Route::get('/create', [UserOrderController::class, 'create'])->name('create');
         Route::post('/', [UserOrderController::class, 'store'])->name('store');
         Route::get('/{order}', [UserOrderController::class, 'show'])->name('show');
+        Route::post('/{order}/pay', [UserOrderController::class, 'processPayment'])->name('pay');
     });
 });
 

@@ -200,4 +200,201 @@ class IPaymuService
             ];
         }
     }
+
+    /**
+     * Check Balance
+     * Endpoint: POST /api/v2/balance
+     */
+    public function checkBalance()
+    {
+        try {
+            $timestamp = $this->getTimestamp();
+            $body = [
+                'account' => $this->va
+            ];
+            
+            $signature = $this->generateSignature($body, 'POST');
+            
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'signature' => $signature,
+                'va' => $this->va,
+                'timestamp' => $timestamp,
+            ])->post($this->baseUrl . '/balance', $body);
+            
+            $result = $response->json();
+            
+            Log::info('iPaymu Check Balance Response', [
+                'status' => $response->status(),
+                'body' => $result
+            ]);
+            
+            return [
+                'success' => $response->successful(),
+                'data' => $result,
+                'status_code' => $response->status()
+            ];
+        } catch (\Exception $e) {
+            Log::error('iPaymu Balance Error: ' . $e->getMessage());
+            
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+
+    /**
+     * Get History Transaction
+     * Endpoint: POST /api/v2/history
+     */
+    public function getHistoryTransaction($params = [])
+    {
+        try {
+            $timestamp = $this->getTimestamp();
+            $body = array_merge([
+                'account' => $this->va,
+                'startdate' => $params['startdate'] ?? date('Y-m-d', strtotime('-30 days')),
+                'enddate' => $params['enddate'] ?? date('Y-m-d'),
+                'page' => $params['page'] ?? 1,
+                'limit' => $params['limit'] ?? 20,
+            ], $params);
+            
+            $signature = $this->generateSignature($body, 'POST');
+            
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'signature' => $signature,
+                'va' => $this->va,
+                'timestamp' => $timestamp,
+            ])->post($this->baseUrl . '/history', $body);
+            
+            $result = $response->json();
+            
+            Log::info('iPaymu History Response', [
+                'status' => $response->status(),
+                'body' => $result
+            ]);
+            
+            return [
+                'success' => $response->successful(),
+                'data' => $result,
+                'status_code' => $response->status()
+            ];
+        } catch (\Exception $e) {
+            Log::error('iPaymu History Error: ' . $e->getMessage());
+            
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+
+    /**
+     * Calculate COD Shipping
+     * Endpoint: POST /api/v2/cod/shipping-calculate
+     */
+    public function calculateShipping($data)
+    {
+        try {
+            $timestamp = $this->getTimestamp();
+            $body = [
+                'destination_area_id' => $data['destination_area_id'],
+                'pickup_area_id' => $data['pickup_area_id'],
+                'weight' => $data['weight'], // in kilogram
+                'amount' => $data['amount'],
+            ];
+            
+            $signature = $this->generateSignature($body, 'POST');
+            
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'signature' => $signature,
+                'va' => $this->va,
+                'timestamp' => $timestamp,
+            ])->asForm()->post($this->baseUrl . '/cod/shipping-calculate', $body);
+            
+            $result = $response->json();
+            
+            Log::info('iPaymu Shipping Calculate Response', [
+                'status' => $response->status(),
+                'body' => $result
+            ]);
+            
+            return [
+                'success' => $response->successful(),
+                'data' => $result,
+                'status_code' => $response->status()
+            ];
+        } catch (\Exception $e) {
+            Log::error('iPaymu Shipping Calculate Error: ' . $e->getMessage());
+            
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+
+    /**
+     * Track COD Package
+     * Endpoint: POST /api/v2/cod/tracking
+     */
+    public function trackPackage($awb = null, $transactionId = null)
+    {
+        try {
+            if (!$awb && !$transactionId) {
+                return [
+                    'success' => false,
+                    'message' => 'AWB or Transaction ID required',
+                    'data' => null
+                ];
+            }
+
+            $timestamp = $this->getTimestamp();
+            $body = [];
+            
+            if ($awb) {
+                $body['awb'] = $awb;
+            }
+            
+            if ($transactionId) {
+                $body['transaction_id'] = $transactionId;
+            }
+            
+            $signature = $this->generateSignature($body, 'POST');
+            
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'signature' => $signature,
+                'va' => $this->va,
+                'timestamp' => $timestamp,
+            ])->asForm()->post($this->baseUrl . '/cod/tracking', $body);
+            
+            $result = $response->json();
+            
+            Log::info('iPaymu Tracking Response', [
+                'status' => $response->status(),
+                'body' => $result
+            ]);
+            
+            return [
+                'success' => $response->successful(),
+                'data' => $result,
+                'status_code' => $response->status()
+            ];
+        } catch (\Exception $e) {
+            Log::error('iPaymu Tracking Error: ' . $e->getMessage());
+            
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
 }

@@ -185,9 +185,52 @@
                         </div>
 
                         @if($order->payment_status !== 'paid' && $order->status !== 'cancelled')
-                        <div class="alert alert-warning small">
-                            <i class="fas fa-info-circle me-1"></i>
-                            Silakan lakukan pembayaran untuk memproses pesanan Anda.
+                        
+                        <!-- Payment Action Section -->
+                        <div class="border-top pt-3 mt-3">
+                            @if($order->ipaymu_payment_url)
+                                <!-- If payment URL exists, show it -->
+                                <div class="mb-3">
+                                    <div class="alert alert-info small mb-2">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Link pembayaran sudah dibuat. Klik tombol di bawah untuk melanjutkan pembayaran.
+                                    </div>
+                                    
+                                    @if($order->payment_expired_at)
+                                    <div class="text-muted small mb-2">
+                                        <i class="fas fa-clock me-1"></i>
+                                        Berlaku hingga: <strong>{{ $order->payment_expired_at->format('d M Y, H:i') }}</strong>
+                                    </div>
+                                    @endif
+                                    
+                                    <a href="{{ $order->ipaymu_payment_url }}" 
+                                       target="_blank"
+                                       class="btn btn-primary w-100 mb-2">
+                                        <i class="fas fa-external-link-alt me-2"></i>
+                                        Lanjutkan Pembayaran
+                                    </a>
+                                </div>
+                            @else
+                                <!-- If no payment URL, show create payment button -->
+                                <form action="{{ route('user.orders.pay', $order) }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="btn btn-primary w-100 btn-lg mb-2">
+                                        <i class="fas fa-credit-card me-2"></i>
+                                        Bayar Sekarang
+                                    </button>
+                                </form>
+                            @endif
+                            
+                            <div class="alert alert-warning small mb-0">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Silakan lakukan pembayaran untuk memproses pesanan Anda.
+                            </div>
+                        </div>
+                        
+                        @elseif($order->payment_status === 'paid')
+                        <div class="alert alert-success small mt-3">
+                            <i class="fas fa-check-circle me-1"></i>
+                            Pembayaran telah diterima. Pesanan Anda sedang diproses.
                         </div>
                         @endif
                     </div>
@@ -208,4 +251,21 @@
         </div>
     </div>
 </div>
+
+@if(session('success') || session('error') || session('info') || session('warning'))
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    @if(session('success'))
+        alert('{{ session('success') }}');
+    @elseif(session('error'))
+        alert('Error: {{ session('error') }}');
+    @elseif(session('info'))
+        alert('{{ session('info') }}');
+    @elseif(session('warning'))
+        alert('{{ session('warning') }}');
+    @endif
+});
+</script>
+@endif
+
 @endsection

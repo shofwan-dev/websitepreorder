@@ -114,4 +114,79 @@ class OrderController extends Controller
 
         return view('user.orders.track', compact('order'));
     }
+
+    /**
+     * Process payment for an order
+     */
+    public function processPayment(Order $order)
+    {
+        // Ensure user can only pay for their own orders
+        if ($order->user_id !== Auth::id()) {
+            abort(403, 'Anda tidak memiliki akses ke order ini.');
+        }
+
+        // Check if order is already paid
+        if ($order->payment_status === 'paid') {
+            return redirect()
+                ->route('user.orders.show', $order)
+                ->with('info', 'Order ini sudah dibayar.');
+        }
+
+        // Check if order is cancelled
+        if ($order->status === 'cancelled') {
+            return redirect()
+                ->route('user.orders.show', $order)
+                ->with('error', 'Order ini sudah dibatalkan.');
+        }
+
+        try {
+            $ipaymu = app(\App\Services\IPaymuService::class);
+            
+            // Prepare order data for iPaymu
+            $orderData = [
+                'product' => [$order->product->name ?? 'Produk'],
+                'qty' => [$order->quantity],
+                'price' => [$order->price],
+                'returnUrl' => route('ipaymu.return'),
+                'cancelUrl' => route('ipaymu.cancel'),
+                'notifyUrl' => route('ipaymu.callback'),
+                'referenceId' => 'ORDER-' . $order->id,
+                'buyerName' => $order->customer_name,
+                'buyerEmail' => $order->customer_email ?? Auth::user()->email,
+                'buyerPhone' => $order->customer_phone,
+            ];
+
+            $result = $ipaymu->createPayment($orderData);
+
+            if ($result['success'] && isset($result['data']['Data'])) {
+                $paymentData = $result['data']['Data'];
+                
+                // Update order with payment information
+                $order->update([
+                    'ipaymu_transaction_id' => $paymentData['TransactionId'] ?? null,
+                    'ipaymu_payment_url' => $paymentData['Url'] ?? null,
+                    'ipaymu_session_id' => $paymentData['SessionID'] ?? null,
+                    'payment_expired_at' => isset($paymentData['Expired']) ? 
+                        \Carbon\Carbon::parse($paymentData['Expired']) : null,
+                ]);
+
+                // Redirect to payment page
+                if (!empty($paymentData['Url'])) {
+                    return redirect($paymentData['Url']);
+                }
+            }
+
+            // If payment creation failed
+            return redirect()
+                ->route('user.orders.show', $order)
+                ->with('error', 'Gagal membuat pembayaran. ' . ($result['message'] ?? 'Silakan coba lagi.'));
+
+        } catch (\Exception $e) {
+            \Log::error('Payment process error: ' . $e->getMessage());
+            
+            return redirect()
+                ->route('user.orders.show', $order)
+                ->with('error', 'Terjadi kesalahan saat memproses pembayaran. Silakan coba lagi.');
+        }
+    }
 }
