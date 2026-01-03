@@ -12,7 +12,7 @@
                     <h1 class="h2 fw-bold mb-2" style="color: #8b6b2d; font-family: 'Georgia', serif;">
                         <i class="fas fa-hand-peace me-2"></i> Assalamu'alaikum, {{ Auth::user()->name }}!
                     </h1>
-                    <p class="text-muted mb-0">Selamat datang di dashboard PO Kaligrafi Anda</p>
+                    <p class="text-muted mb-0">Selamat datang di dashboard {{ $site_settings['site_name'] ?? 'PO Kaligrafi Lampu' }} Anda</p>
                 </div>
                 <div class="mt-3 mt-md-0">
                     <a href="{{ route('user.orders.create') }}" class="btn btn-lg fw-semibold text-white border-0"

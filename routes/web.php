@@ -51,6 +51,17 @@ Route::post('/ipaymu/callback', [App\Http\Controllers\IPaymuCallbackController::
 Route::get('/ipaymu/return', [App\Http\Controllers\IPaymuCallbackController::class, 'return'])->name('ipaymu.return');
 Route::get('/ipaymu/cancel', [App\Http\Controllers\IPaymuCallbackController::class, 'cancel'])->name('ipaymu.cancel');
 
+// iPaymu Debug Routes (for testing)
+Route::post('/ipaymu/debug-callback', [App\Http\Controllers\IPaymuDebugController::class, 'debugCallback'])->name('ipaymu.debug.callback');
+Route::get('/ipaymu/debug-orders', [App\Http\Controllers\IPaymuDebugController::class, 'listOrders'])->name('ipaymu.debug.orders');
+
+// iPaymu Sync Routes (check real status from iPaymu API)
+Route::get('/ipaymu/sync-order/{order}', [App\Http\Controllers\IPaymuSyncController::class, 'syncOrderStatus'])->name('ipaymu.sync.order');
+Route::get('/ipaymu/sync-all-pending', [App\Http\Controllers\IPaymuSyncController::class, 'syncAllPendingOrders'])->name('ipaymu.sync.all');
+
+// Order Test Routes (for manual testing - NOT synced with iPaymu!)
+Route::get('/test/order/{order}/mark-paid', [App\Http\Controllers\OrderTestController::class, 'markAsPaid'])->name('test.order.mark-paid');
+
 // ============================================================================
 // AUTH ROUTES
 // ============================================================================
@@ -98,6 +109,7 @@ Route::middleware(['auth'])->prefix('my')->name('user.')->group(function () {
         Route::post('/', [UserOrderController::class, 'store'])->name('store');
         Route::get('/{order}', [UserOrderController::class, 'show'])->name('show');
         Route::post('/{order}/pay', [UserOrderController::class, 'processPayment'])->name('pay');
+        Route::put('/{order}/cancel', [UserOrderController::class, 'cancel'])->name('cancel');
     });
 });
 
@@ -192,6 +204,7 @@ Route::middleware(['auth', 'role:admin,manager'])->prefix('admin')->name('admin.
         Route::put('/{batch}/status', [ProductionManagerController::class, 'updateBatchStatus'])->name('update-status');
         Route::put('/{batch}', [ProductionManagerController::class, 'update'])->name('update');
         Route::delete('/{batch}', [ProductionManagerController::class, 'destroy'])->name('destroy');
+        Route::post('/{batch}/toggle-featured', [ProductionManagerController::class, 'toggleFeatured'])->name('toggle-featured');
     });
     
     // ========== SETTINGS ==========
@@ -233,7 +246,7 @@ Route::middleware(['auth', 'role:admin,manager'])->prefix('api/admin')->name('ap
             $service = new WhatsAppService();
             
             $connectionTest = $service->testConnection();
-            $result = $service->sendMessage('081234567890', 'Test API WhatsApp dari PO Kaligrafi');
+            $result = $service->sendMessage('081234567890', 'Test API WhatsApp dari ' . (config('settings.site_name') ?? 'PO Kaligrafi Lampu'));
             
             return response()->json([
                 'connection_test' => $connectionTest,

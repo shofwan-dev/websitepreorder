@@ -223,4 +223,50 @@ class OrderController extends Controller
                 ->with('error', 'Terjadi kesalahan saat memproses pembayaran. Silakan coba lagi.');
         }
     }
+    
+    /**
+     * Cancel an order
+     */
+    public function cancel(Order $order, Request $request)
+    {
+        // Ensure user can only cancel their own orders
+        if ($order->user_id !== Auth::id()) {
+            abort(403, 'Anda tidak memiliki akses ke order ini.');
+        }
+        
+        // Check if order can be cancelled
+        if ($order->status === 'cancelled') {
+            return redirect()
+                ->route('user.orders.show', $order)
+                ->with('info', 'Order ini sudah dibatalkan sebelumnya.');
+        }
+        
+        // Don't allow cancellation if already paid
+        if ($order->payment_status === 'paid') {
+            return redirect()
+                ->route('user.orders.show', $order)
+                ->with('error', 'Order yang sudah dibayar tidak dapat dibatalkan. Silakan hubungi admin untuk refund.');
+        }
+        
+        // Validate cancel reason (optional)
+        $validated = $request->validate([
+            'cancel_reason' => ['nullable', 'string', 'max:500'],
+        ]);
+        
+        // Update order status
+        $order->status = 'cancelled';
+        $order->cancel_reason = $validated['cancel_reason'] ?? null;
+        $order->cancelled_at = now();
+        $order->save();
+        
+        \Log::info('Order cancelled by user', [
+            'order_id' => $order->id,
+            'user_id' => Auth::id(),
+            'reason' => $validated['cancel_reason'] ?? 'No reason provided',
+        ]);
+        
+        return redirect()
+            ->route('user.orders.show', $order)
+            ->with('success', 'Order berhasil dibatalkan.');
+    }
 }

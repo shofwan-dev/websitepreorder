@@ -83,6 +83,77 @@ class ProductionManagerController extends Controller
     }
     
     /**
+     * Update batch details.
+     */
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'batch_number' => 'required|string|unique:batches,batch_number,' . $id,
+            'target_quantity' => 'required|integer|min:1',
+            'production_start_date' => 'nullable|date',
+            'estimated_completion_date' => 'nullable|date|after_or_equal:production_start_date',
+            'notes' => 'nullable|string'
+        ]);
+        
+        $batch = Batch::findOrFail($id);
+        $batch->update([
+            'batch_number' => $request->batch_number,
+            'target_quantity' => $request->target_quantity,
+            'production_start_date' => $request->production_start_date,
+            'estimated_completion_date' => $request->estimated_completion_date,
+            'notes' => $request->notes ?? $batch->notes
+        ]);
+        
+        return redirect()->route('admin.batches.index')
+            ->with('success', 'Batch berhasil diperbarui');
+    }
+    
+    /**
+     * Delete a batch.
+     */
+    public function destroy($id)
+    {
+        $batch = Batch::findOrFail($id);
+        
+        // Check if batch has orders
+        if ($batch->orders()->count() > 0) {
+            return redirect()->back()
+                ->with('error', 'Tidak dapat menghapus batch yang sudah memiliki pesanan. Ubah status menjadi "cancelled" sebagai gantinya.');
+        }
+        
+        $batchNumber = $batch->batch_number;
+        $batch->delete();
+        
+        return redirect()->route('admin.batches.index')
+            ->with('success', 'Batch ' . $batchNumber . ' berhasil dihapus');
+    }
+    
+    /**
+     * Toggle batch as featured for hero homepage.
+     * Only one batch can be featured at a time.
+     */
+    public function toggleFeatured($id)
+    {
+        $batch = Batch::findOrFail($id);
+        
+        if ($batch->is_featured) {
+            // Unfeatured this batch
+            $batch->update(['is_featured' => false]);
+            $message = 'Batch #' . $batch->batch_number . ' dihapus dari tampilan Hero Homepage';
+        } else {
+            // Remove featured from all other batches first
+            Batch::where('is_featured', true)->update(['is_featured' => false]);
+            
+            // Set this batch as featured
+            $batch->update(['is_featured' => true]);
+            $message = 'Batch #' . $batch->batch_number . ' sekarang ditampilkan di Hero Homepage';
+        }
+        
+        return redirect()->route('admin.batches.index')
+            ->with('success', $message);
+    }
+    
+    /**
      * Create a new production batch.
      */
     public function createBatch(Request $request)
@@ -108,7 +179,7 @@ class ProductionManagerController extends Controller
         
         // Perbaikan di sini: route 'production.batch.detail' mungkin belum ada
         // Ganti dengan redirect yang sesuai
-        return redirect()->route('production.batches')
+        return redirect()->route('admin.batches.index')
             ->with('success', 'Batch produksi berhasil dibuat');
         
         // Atau jika Anda ingin redirect ke detail batch:

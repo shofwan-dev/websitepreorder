@@ -16,7 +16,7 @@
             <h1 class="page-title">
                 <i class="fas fa-industry me-2"></i>Production Manager
             </h1>
-            <p class="text-muted">Dashboard untuk mengelola seluruh proses produksi PO Kaligrafi</p>
+            <p class="text-muted">Dashboard untuk mengelola seluruh proses produksi {{ $site_settings['site_name'] ?? 'PO Kaligrafi Lampu' }}</p>
         </div>
         <div class="d-flex gap-2">
             <a href="{{ route('admin.batches.create') }}" class="btn btn-success">

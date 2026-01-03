@@ -21,6 +21,7 @@ class Batch extends Model
         'estimated_completion_date',
         'actual_completion_date',
         'notes',
+        'is_featured',
         'created_by'
     ];
 
@@ -28,6 +29,7 @@ class Batch extends Model
         'production_start_date' => 'date',
         'estimated_completion_date' => 'date',
         'actual_completion_date' => 'date',
+        'is_featured' => 'boolean',
     ];
 
     /**

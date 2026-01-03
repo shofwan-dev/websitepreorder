@@ -91,6 +91,7 @@
                         <th>Progress</th>
                         <th>Mulai</th>
                         <th>Estimasi Selesai</th>
+                        <th>Hero</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
@@ -141,6 +142,20 @@
                             @endif
                         </td>
                         <td>
+                            <form method="POST" action="{{ route('admin.batches.toggle-featured', $batch->id) }}" class="d-inline">
+                                @csrf
+                                <button type="submit" 
+                                        class="btn btn-sm {{ $batch->is_featured ? 'btn-warning' : 'btn-outline-secondary' }}"
+                                        data-bs-toggle="tooltip" 
+                                        title="{{ $batch->is_featured ? 'Hapus dari Hero' : 'Tampilkan di Hero' }}">
+                                    <i class="fas fa-star{{ $batch->is_featured ? '' : '-half-alt' }}"></i>
+                                    @if($batch->is_featured)
+                                        <span class="ms-1 d-none d-lg-inline">Featured</span>
+                                    @endif
+                                </button>
+                            </form>
+                        </td>
+                        <td>
                             <div class="btn-group btn-group-sm">
                                 <a href="{{ route('admin.batches.show', $batch->id) }}" 
                                    class="btn btn-outline-primary"
@@ -148,19 +163,24 @@
                                    title="Detail">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <button type="button" 
-                                        class="btn btn-outline-danger"
-                                        data-bs-toggle="tooltip" 
-                                        title="Hapus"
-                                        onclick="confirmDelete({{ $batch->id }})">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+                                <form method="POST" action="{{ route('admin.batches.destroy', $batch->id) }}" 
+                                      class="d-inline"
+                                      onsubmit="return confirm('Apakah Anda yakin ingin menghapus batch ini?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" 
+                                            class="btn btn-outline-danger"
+                                            data-bs-toggle="tooltip" 
+                                            title="Hapus">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
                             </div>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" class="text-center text-muted py-4">
+                        <td colspan="9" class="text-center text-muted py-4">
                             <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
                             <p>Belum ada batch produksi</p>
                             <a href="{{ route('admin.batches.create') }}" class="btn btn-primary btn-sm">
@@ -179,24 +199,10 @@
     </div>
     @endif
 </div>
-
-<!-- Delete Confirmation Form -->
-<form id="deleteForm" method="POST" style="display: none;">
-    @csrf
-    @method('DELETE')
-</form>
 @endsection
 
 @push('scripts')
 <script>
-function confirmDelete(batchId) {
-    if (confirm('Apakah Anda yakin ingin menghapus batch ini? Tindakan ini tidak dapat dibatalkan.')) {
-        const form = document.getElementById('deleteForm');
-        form.action = `/admin/batches/${batchId}`;
-        form.submit();
-    }
-}
-
 // Initialize tooltips
 document.addEventListener('DOMContentLoaded', function() {
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));

@@ -27,6 +27,7 @@ class Order extends Model
         'is_verified',
         'is_displayed',
         'notes',
+        'cancel_reason',
         'ipaymu_transaction_id',
         'ipaymu_payment_url',
         'ipaymu_session_id',
@@ -42,6 +43,7 @@ class Order extends Model
         'verified_at' => 'datetime',
         'payment_expired_at' => 'datetime',
         'paid_at' => 'datetime',
+        'cancelled_at' => 'datetime',
     ];
     
     protected $appends = ['masked_name'];

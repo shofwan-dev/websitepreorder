@@ -15,8 +15,11 @@ class HomeController extends Controller
      */
     public function index()
     {
-        // Ambil produk terbaru yang sedang dalam progress
-        $latestProduct = $this->getLatestProductInProgress();
+        // Ambil featured batch untuk ditampilkan di hero
+        $featuredBatch = $this->getFeaturedBatch();
+        
+        // Ambil produk dari featured batch atau fallback ke produk terbaru
+        $latestProduct = $featuredBatch?->product ?? $this->getLatestProductInProgress();
         
         // Ambil semua order yang sudah terverifikasi untuk ditampilkan
         $allOrders = $this->getAllVerifiedOrders();
@@ -24,8 +27,10 @@ class HomeController extends Controller
         // Ambil timeline produksi
         $productionTimeline = $this->getProductionTimeline($latestProduct);
         
-        // Hitung progress kuota
-        $progressData = $this->calculateProgress($latestProduct);
+        // Hitung progress kuota berdasarkan batch atau produk
+        $progressData = $featuredBatch 
+            ? $this->calculateProgressFromBatch($featuredBatch)
+            : $this->calculateProgress($latestProduct);
         
         // Ambil semua produk aktif untuk ditampilkan di grid
         $activeProducts = Product::where('is_active', true)
@@ -34,11 +39,22 @@ class HomeController extends Controller
         
         return view('home', compact(
             'latestProduct', 
+            'featuredBatch',
             'allOrders', 
             'productionTimeline',
             'progressData',
             'activeProducts'
         ));
+    }
+    
+    /**
+     * Mendapatkan batch yang di-featured untuk hero
+     */
+    private function getFeaturedBatch()
+    {
+        return Batch::where('is_featured', true)
+            ->with('product')
+            ->first();
     }
     
     /**
@@ -197,6 +213,39 @@ class HomeController extends Controller
             'current_orders' => $currentOrders,
             'remaining_slots' => $remainingSlots,
             'min_quota' => $minQuota
+        ];
+    }
+    
+    /**
+     * Menghitung progress kuota PO dari batch
+     */
+    private function calculateProgressFromBatch($batch)
+    {
+        if (!$batch) {
+            return [
+                'progress_percentage' => 0,
+                'current_orders' => 0,
+                'remaining_slots' => 10,
+                'min_quota' => 10,
+                'batch_number' => null
+            ];
+        }
+        
+        $currentQuantity = $batch->current_quantity ?? 0;
+        $targetQuantity = $batch->target_quantity ?? 10;
+        $remainingSlots = max(0, $targetQuantity - $currentQuantity);
+        
+        $progressPercentage = ($targetQuantity > 0) 
+            ? min(100, ($currentQuantity / $targetQuantity) * 100)
+            : 0;
+            
+        return [
+            'progress_percentage' => $progressPercentage,
+            'current_orders' => $currentQuantity,
+            'remaining_slots' => $remainingSlots,
+            'min_quota' => $targetQuantity,
+            'batch_number' => $batch->batch_number,
+            'batch_status' => $batch->status_label
         ];
     }
     

@@ -18,15 +18,19 @@
                     {{ $site_settings['tagline'] ?? 'Menghadirkan cahaya ketenangan melalui karya kaligrafi islami berkualitas.' }}
                 </p>
                 <div class="flex space-x-4">
-                    <a href="#" class="text-gray-300 hover:text-warm-gold-300">
+                    <a href="https://wa.me/{{ str_replace(['-', ' ', '+'], '', $site_settings['whatsapp'] ?? '6281234567890') }}" target="_blank" class="text-gray-300 hover:text-warm-gold-300">
                         <i class="fab fa-whatsapp text-xl"></i>
                     </a>
-                    <a href="#" class="text-gray-300 hover:text-warm-gold-300">
+                    @if(!empty($site_settings['instagram']))
+                    <a href="https://instagram.com/{{ str_replace('@', '', $site_settings['instagram']) }}" target="_blank" class="text-gray-300 hover:text-warm-gold-300">
                         <i class="fab fa-instagram text-xl"></i>
                     </a>
-                    <a href="#" class="text-gray-300 hover:text-warm-gold-300">
+                    @endif
+                    @if(!empty($site_settings['facebook']))
+                    <a href="{{ str_starts_with($site_settings['facebook'], 'http') ? $site_settings['facebook'] : 'https://facebook.com/' . $site_settings['facebook'] }}" target="_blank" class="text-gray-300 hover:text-warm-gold-300">
                         <i class="fab fa-facebook text-xl"></i>
                     </a>
+                    @endif
                 </div>
             </div>
             

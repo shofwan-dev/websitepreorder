@@ -35,7 +35,7 @@
                             <tr>
                                 <td><strong>BCA</strong></td>
                                 <td>1234567890</td>
-                                <td>PO Kaligrafi</td>
+                                <td>{{ $site_settings['site_name'] ?? 'PO Kaligrafi Lampu' }}</td>
                                 <td>
                                     <button class="btn btn-sm btn-outline-primary" disabled>Edit</button>
                                 </td>
@@ -43,7 +43,7 @@
                             <tr>
                                 <td><strong>Mandiri</strong></td>
                                 <td>0987654321</td>
-                                <td>PO Kaligrafi</td>
+                                <td>{{ $site_settings['site_name'] ?? 'PO Kaligrafi Lampu' }}</td>
                                 <td>
                                     <button class="btn btn-sm btn-outline-primary" disabled>Edit</button>
                                 </td>

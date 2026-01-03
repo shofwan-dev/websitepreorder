@@ -6,7 +6,7 @@
 @section('content')
 <div class="page-header">
     <h1 class="page-title">Pengaturan</h1>
-    <p class="text-muted">Konfigurasi sistem PO Kaligrafi</p>
+    <p class="text-muted">Konfigurasi sistem {{ $site_settings['site_name'] ?? 'PO Kaligrafi Lampu' }}</p>
 </div>
 
 <div class="row g-4">

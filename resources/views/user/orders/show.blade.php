@@ -261,10 +261,19 @@
                                 </form>
                             @endif
                             
-                            <div class="alert alert-warning small mb-0">
+                            <div class="alert alert-warning small mb-2">
                                 <i class="fas fa-info-circle me-1"></i>
                                 Silakan lakukan pembayaran untuk memproses pesanan Anda.
                             </div>
+                            
+                            <!-- Cancel Order Button -->
+                            <button type="button" 
+                                    class="btn btn-outline-danger btn-sm w-100" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#cancelOrderModal">
+                                <i class="fas fa-times-circle me-1"></i>
+                                Batalkan Order
+                            </button>
                         </div>
                         
                         @elseif($order->payment_status === 'paid')
@@ -281,7 +290,7 @@
                     <div class="card-body text-white">
                         <h6 class="fw-bold mb-3"><i class="fas fa-headset me-2"></i> Butuh Bantuan?</h6>
                         <p class="small mb-3">Hubungi kami jika ada pertanyaan tentang pesanan Anda.</p>
-                        <a href="https://wa.me/6281234567890?text=Halo,%20saya%20ingin%20bertanya%20tentang%20order%20%23{{ $order->id }}" 
+                        <a href="https://wa.me/{{ str_replace(['-', ' ', '+'], '', $site_settings['whatsapp'] ?? '6281234567890') }}?text=Halo,%20saya%20ingin%20bertanya%20tentang%20order%20%23{{ $order->id }}" 
                            target="_blank" class="btn btn-light btn-sm w-100">
                             <i class="fab fa-whatsapp me-1"></i> Chat WhatsApp
                         </a>
@@ -307,5 +316,73 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endif
+
+<!-- Cancel Order Modal -->
+<div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-labelledby="cancelOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="cancelOrderModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Konfirmasi Pembatalan Order
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Perhatian!</strong> Anda akan membatalkan order ini.
+                </div>
+                
+                <p class="mb-3">Apakah Anda yakin ingin membatalkan order <strong>#{{ $order->id }}</strong>?</p>
+                
+                <div class="bg-light p-3 rounded mb-3">
+                    <div class="row">
+                        <div class="col-6">
+                            <small class="text-muted d-block">Produk</small>
+                            <strong class="small">{{ $order->product->name ?? 'N/A' }}</strong>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted d-block">Total</small>
+                            <strong class="small">Rp {{ number_format($order->total_amount, 0, ',', '.') }}</strong>
+                        </div>
+                    </div>
+                </div>
+                
+                <form action="{{ route('user.orders.cancel', $order) }}" method="POST" id="cancelOrderForm">
+                    @csrf
+                    @method('PUT')
+                    
+                    <div class="mb-3">
+                        <label for="cancel_reason" class="form-label">
+                            Alasan Pembatalan <span class="text-muted">(Opsional)</span>
+                        </label>
+                        <textarea class="form-control" 
+                                  id="cancel_reason" 
+                                  name="cancel_reason" 
+                                  rows="3" 
+                                  placeholder="Contoh: Salah pilih produk, Berubah pikiran, dll."></textarea>
+                        <small class="text-muted">Alasan ini akan membantu kami meningkatkan layanan.</small>
+                    </div>
+                </form>
+                
+                <div class="alert alert-info small mb-0">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Data order tidak akan dihapus, hanya status yang berubah menjadi "Dibatalkan".
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    Kembali
+                </button>
+                <button type="submit" form="cancelOrderForm" class="btn btn-danger">
+                    <i class="fas fa-times-circle me-1"></i>
+                    Ya, Batalkan Order
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 @endsection

@@ -77,10 +77,9 @@
                             <label for="testMessage" class="form-label">
                                 <i class="fas fa-comment me-1"></i>Pesan
                             </label>
-                            <textarea class="form-control" id="testMessage" rows="4" 
                                       placeholder="Tulis pesan test Anda di sini...">Assalamu'alaikum! 🕌
 
-Ini adalah pesan test dari sistem PO Kaligrafi Lampu.
+Ini adalah pesan test dari sistem {{ $site_settings['site_name'] ?? 'PO Kaligrafi Lampu' }}.
 
 Terima kasih telah menggunakan layanan kami.</textarea>
                         </div>
@@ -428,7 +427,7 @@ function clearForm() {
     document.getElementById('testPhone').value = '';
     document.getElementById('testMessage').value = `Assalamu'alaikum! 🕌
 
-Ini adalah pesan test dari sistem PO Kaligrafi Lampu.
+Ini adalah pesan test dari sistem {{ $site_settings['site_name'] ?? 'PO Kaligrafi Lampu' }}.
 
 Terima kasih telah menggunakan layanan kami.`;
     document.getElementById('messageResult').style.display = 'none';

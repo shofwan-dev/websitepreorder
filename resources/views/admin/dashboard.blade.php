@@ -6,7 +6,7 @@
 @section('content')
 <div class="page-header">
     <h1 class="page-title">Selamat Datang, {{ Auth::user()->name }}!</h1>
-    <p class="text-muted">Berikut adalah ringkasan data PO Kaligrafi hari ini.</p>
+    <p class="text-muted">Berikut adalah ringkasan data {{ $site_settings['site_name'] ?? 'PO Kaligrafi Lampu' }} hari ini.</p>
 </div>
 
 <!-- Stats Cards -->

@@ -33,19 +33,47 @@
                 $productName = $latestProduct->name ?? 'Kaligrafi Lampu Allah';
                 $productDescription = $latestProduct->description ?? 'Kaligrafi lampu dengan tulisan Allah yang indah';
             @endphp
+            
+            @if(isset($featuredBatch) && $featuredBatch)
+            <div class="mb-3">
+                <span class="badge bg-warning text-dark me-2">
+                    <i class="fas fa-star me-1"></i>Batch #{{ $featuredBatch->batch_number }}
+                </span>
+                <span class="badge bg-{{ $featuredBatch->status_color }}">
+                    {{ $featuredBatch->status_label }}
+                </span>
+            </div>
+            @endif
+            
             <h1 class="display-4 fw-bold mb-4">{{ $productName }}</h1>
             <p class="lead mb-4">{{ $productDescription }}</p>
             <div class="d-flex gap-3">
-                <a href="{{ route('order.create') }}" class="btn btn-primary btn-lg">
+                @if($latestProduct)
+                <a href="{{ route('user.orders.create', ['product_id' => $latestProduct->id]) }}" class="btn btn-primary btn-lg">
                     <i class="fas fa-cart-plus me-2"></i>Ikut PO Sekarang
                 </a>
-                <a href="#products" class="btn btn-outline-primary btn-lg">Lihat Produk</a>
+                <a href="{{ route('product.detail', $latestProduct) }}" class="btn btn-outline-primary btn-lg">
+                    <i class="fas fa-eye me-2"></i>Lihat Produk
+                </a>
+                @else
+                <a href="{{ route('user.orders.create') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-cart-plus me-2"></i>Ikut PO Sekarang
+                </a>
+                <a href="#products" class="btn btn-outline-primary btn-lg">
+                    <i class="fas fa-eye me-2"></i>Lihat Produk
+                </a>
+                @endif
             </div>
         </div>
         <div class="col-md-6">
             <div class="card shadow">
                 <div class="card-body text-center p-4">
-                    <h5 class="card-title mb-3">Progress Pre-Order</h5>
+                    <h5 class="card-title mb-3">
+                        <i class="fas fa-chart-line me-2 text-primary"></i>Progress Pre-Order
+                        @if(isset($progressData['batch_number']) && $progressData['batch_number'])
+                        <small class="text-muted d-block mt-1">Batch #{{ $progressData['batch_number'] }}</small>
+                        @endif
+                    </h5>
                     <div class="mb-3">
                         <div class="progress" style="height: 30px;">
                             @php
@@ -73,12 +101,13 @@
                     </div>
                     <p class="text-muted mt-3">
                         <i class="fas fa-info-circle me-1"></i>
-                        Minimal {{ $progressData['min_quota'] ?? 10 }} pemesan untuk produksi
+                        Target {{ $progressData['min_quota'] ?? 10 }} pemesan untuk produksi
                     </p>
                 </div>
             </div>
         </div>
     </div>
+
 
 
     <!-- Products Listing -->

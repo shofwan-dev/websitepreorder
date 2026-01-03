@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Production Manager - PO Kaligrafi')
+@section('title', 'Production Manager - ' . ($site_settings['site_name'] ?? 'PO Kaligrafi Lampu'))
 
 @section('content')
 <div class="container-fluid py-4">
@@ -10,7 +10,7 @@
             <h1 class="h2 fw-bold" style="color: #8b6b2d;">
                 <i class="fas fa-industry me-2"></i> Production Manager
             </h1>
-            <p class="text-muted mb-0">Dashboard untuk mengelola seluruh proses produksi PO Kaligrafi</p>
+            <p class="text-muted mb-0">Dashboard untuk mengelola seluruh proses produksi {{ $site_settings['site_name'] ?? 'PO Kaligrafi Lampu' }}</p>
         </div>
         <div class="d-flex gap-2">
             <button class="btn btn-success">

@@ -150,7 +150,7 @@
                     
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-semibold">WhatsApp</label>
+                            <label class="form-label fw-semibold">WhatsApp (Publik)</label>
                             <input type="text" 
                                    class="form-control @error('whatsapp') is-invalid @enderror" 
                                    name="whatsapp" 
@@ -161,9 +161,28 @@
                             @enderror
                             <div class="form-text">
                                 <i class="fas fa-info-circle me-1"></i>
-                                Format internasional dengan kode negara (contoh: 6281234567890)
+                                Nomor WhatsApp untuk ditampilkan di website (format: 6281234567890)
                             </div>
                         </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">WhatsApp Penerima Notifikasi</label>
+                            <input type="text" 
+                                   class="form-control @error('whatsapp_notification') is-invalid @enderror" 
+                                   name="whatsapp_notification" 
+                                   value="{{ old('whatsapp_notification', $settings['whatsapp_notification'] ?? $settings['whatsapp'] ?? '6281234567890') }}"
+                                   placeholder="6281234567890">
+                            @error('whatsapp_notification')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <div class="form-text">
+                                <i class="fas fa-bell me-1"></i>
+                                Nomor untuk menerima notifikasi order baru (bisa berbeda dari WhatsApp publik)
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
                         
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-semibold">Instagram</label>

@@ -32,6 +32,7 @@ class SettingController extends Controller
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
             'whatsapp' => ['nullable', 'string', 'max:50'],
+            'whatsapp_notification' => ['nullable', 'string', 'max:50'],
             'instagram' => ['nullable', 'string', 'max:100'],
             'facebook' => ['nullable', 'string', 'max:255'],
             'twitter' => ['nullable', 'string', 'max:100'],
@@ -46,6 +47,7 @@ class SettingController extends Controller
         Setting::setValue('email', $validated['email'] ?? '', 'website');
         Setting::setValue('phone', $validated['phone'] ?? '', 'website');
         Setting::setValue('whatsapp', $validated['whatsapp'] ?? '', 'website');
+        Setting::setValue('whatsapp_notification', $validated['whatsapp_notification'] ?? $validated['whatsapp'] ?? '', 'website');
         Setting::setValue('instagram', $validated['instagram'] ?? '', 'website');
         Setting::setValue('facebook', $validated['facebook'] ?? '', 'website');
         Setting::setValue('twitter', $validated['twitter'] ?? '', 'website');

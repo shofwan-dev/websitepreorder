@@ -108,11 +108,39 @@ class WhatsAppService
             throw new \Exception('Nomor telepon kosong');
         }
         
+        // Check if it's a WhatsApp Group ID (format: 120363166537946168@g.us)
+        if (strpos($phone, '@g.us') !== false) {
+            // It's a group ID, return as is
+            Log::info('WhatsApp Group ID detected', [
+                'group_id' => $phone
+            ]);
+            return $phone;
+        }
+        
+        // Check if it's a WhatsApp Channel ID (format: xxx@c.us)
+        if (strpos($phone, '@c.us') !== false) {
+            // It's a channel/contact ID, return as is
+            Log::info('WhatsApp Contact ID detected', [
+                'contact_id' => $phone
+            ]);
+            return $phone;
+        }
+        
+        // Regular phone number processing
         // Hapus semua karakter non-digit
         $phone = preg_replace('/[^0-9]/', '', $phone);
         
         if (empty($phone)) {
             throw new \Exception('Nomor telepon tidak valid: ' . $phone);
+        }
+        
+        // Validasi panjang maksimal (nomor Indonesia max 13 digit dengan 62)
+        if (strlen($phone) > 15) {
+            Log::error('Phone number too long', [
+                'original' => $phone,
+                'length' => strlen($phone)
+            ]);
+            throw new \Exception('Nomor telepon terlalu panjang: ' . $phone . ' (length: ' . strlen($phone) . ')');
         }
         
         // Jika diawali 0, ganti dengan 62
@@ -121,16 +149,24 @@ class WhatsAppService
         }
         
         // Jika diawali 8 (tanpa 0), tambah 62
-        if (substr($phone, 0, 1) === '8') {
+        elseif (substr($phone, 0, 1) === '8') {
             $phone = '62' . $phone;
         }
         
-        // Jika sudah diawali 62, pastikan panjangnya minimal 10
+        // Jika sudah diawali 62, pastikan panjangnya valid
         if (substr($phone, 0, 2) === '62') {
             if (strlen($phone) < 10) {
                 throw new \Exception('Nomor telepon terlalu pendek: ' . $phone);
             }
+            if (strlen($phone) > 15) {
+                throw new \Exception('Nomor telepon terlalu panjang: ' . $phone);
+            }
         }
+        
+        Log::info('Phone number formatted', [
+            'formatted' => $phone,
+            'length' => strlen($phone)
+        ]);
         
         return $phone;
     }
@@ -257,8 +293,73 @@ class WhatsAppService
         $message .= "⏰ Selesaikan pembayaran dalam 24 jam agar pesanan tidak dibatalkan otomatis.\n\n";
         $message .= "Jazakumullah khairan! 🙏";
         
+        // Send to customer
         $result = $this->sendMessage($customerNumber, $message);
         $this->logNotification($order->id, 'order_created', $message, $result['success'] ?? false);
+        
+        // Send notification to admin
+        try {
+            $this->sendNewOrderNotificationToAdmin($order);
+        } catch (\Exception $e) {
+            Log::error('Failed to send admin notification for new order', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+        
+        return $result;
+    }
+    
+    /**
+     * Send new order notification to admin
+     */
+    public function sendNewOrderNotificationToAdmin($order): array
+    {
+        // Get admin notification number from settings
+        $adminNumber = Setting::getValue('whatsapp_notification', 'website');
+        
+        // If not set, use regular whatsapp number
+        if (empty($adminNumber)) {
+            $adminNumber = Setting::getValue('whatsapp', 'website');
+        }
+        
+        // If still empty, skip
+        if (empty($adminNumber)) {
+            Log::warning('No admin WhatsApp number configured for notifications');
+            return ['success' => false, 'message' => 'No admin number configured'];
+        }
+        
+        $adminNumber = $this->formatPhoneNumber($adminNumber);
+        $productName = $order->product->name ?? 'Produk';
+        $totalAmount = number_format($order->total_amount, 0, ',', '.');
+        $adminOrderUrl = url('/admin/orders/' . $order->id);
+        
+        $message = "🔔 *ORDER BARU MASUK!*\n\n";
+        $message .= "━━━━━━━━━━━━━━━━\n";
+        $message .= "📋 *Detail Order*\n";
+        $message .= "• Order ID: #$order->id\n";
+        $message .= "• Customer: *$order->customer_name*\n";
+        $message .= "• Phone: $order->customer_phone\n";
+        $message .= "• Produk: *$productName*\n";
+        $message .= "• Jumlah: $order->quantity pcs\n";
+        $message .= "• Total: *Rp $totalAmount*\n";
+        $message .= "• Kota: $order->customer_city\n\n";
+        $message .= "📍 *Alamat Pengiriman:*\n";
+        $message .= "$order->customer_address\n\n";
+        
+        if ($order->notes) {
+            $message .= "📝 *Catatan:*\n";
+            $message .= "$order->notes\n\n";
+        }
+        
+        $message .= "💳 *Status:*\n";
+        $message .= "Menunggu pembayaran dari customer\n\n";
+        $message .= "🔗 *Lihat Detail:*\n";
+        $message .= "$adminOrderUrl\n\n";
+        $message .= "_Notifikasi otomatis dari sistem PO Kaligrafi_";
+        
+        $result = $this->sendMessage($adminNumber, $message);
+        $this->logNotification($order->id, 'admin_new_order', $message, $result['success'] ?? false);
         
         return $result;
     }
@@ -320,8 +421,85 @@ class WhatsAppService
         $message .= "Jazakumullah khairan atas kepercayaannya! 🙏✨\n\n";
         $message .= "_Kami akan bekerja dengan sepenuh hati untuk produk terbaik Anda._";
         
+        // Send to customer
         $result = $this->sendMessage($customerNumber, $message);
         $this->logNotification($order->id, 'payment_success', $message, $result['success'] ?? false);
+        
+        // Send notification to admin
+        try {
+            $this->sendPaymentSuccessNotificationToAdmin($order);
+        } catch (\Exception $e) {
+            Log::error('Failed to send admin notification for payment success', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+        
+        return $result;
+    }
+    
+    /**
+     * Send payment success notification to admin
+     */
+    public function sendPaymentSuccessNotificationToAdmin($order): array
+    {
+        // Get admin notification number from settings
+        $adminNumber = Setting::getValue('whatsapp_notification', 'website');
+        
+        // If not set, use regular whatsapp number
+        if (empty($adminNumber)) {
+            $adminNumber = Setting::getValue('whatsapp', 'website');
+        }
+        
+        // If still empty, skip
+        if (empty($adminNumber)) {
+            Log::warning('No admin WhatsApp number configured for notifications');
+            return ['success' => false, 'message' => 'No admin number configured'];
+        }
+        
+        $adminNumber = $this->formatPhoneNumber($adminNumber);
+        $productName = $order->product->name ?? 'Produk';
+        $totalAmount = number_format($order->total_amount, 0, ',', '.');
+        $adminOrderUrl = url('/admin/orders/' . $order->id);
+        $paidAt = $order->paid_at ? $order->paid_at->format('d M Y, H:i') : now()->format('d M Y, H:i');
+        
+        $message = "💰 *PEMBAYARAN DITERIMA!*\n\n";
+        $message .= "━━━━━━━━━━━━━━━━\n";
+        $message .= "✅ *Order Telah Dibayar*\n\n";
+        $message .= "📋 *Detail Order*\n";
+        $message .= "• Order ID: #$order->id\n";
+        $message .= "• Customer: *$order->customer_name*\n";
+        $message .= "• Phone: $order->customer_phone\n";
+        $message .= "• Produk: *$productName*\n";
+        $message .= "• Jumlah: $order->quantity pcs\n";
+        $message .= "• Total: *Rp $totalAmount*\n";
+        $message .= "• Kota: $order->customer_city\n\n";
+        $message .= "💳 *Pembayaran:*\n";
+        $message .= "• Status: LUNAS ✅\n";
+        $message .= "• Dibayar: $paidAt\n";
+        
+        if ($order->ipaymu_transaction_id) {
+            $message .= "• Transaction ID: $order->ipaymu_transaction_id\n";
+        }
+        
+        $message .= "\n📍 *Alamat Pengiriman:*\n";
+        $message .= "$order->customer_address\n\n";
+        
+        if ($order->notes) {
+            $message .= "📝 *Catatan:*\n";
+            $message .= "$order->notes\n\n";
+        }
+        
+        $message .= "🎯 *Action Required:*\n";
+        $message .= "• Konfirmasi pembayaran\n";
+        $message .= "• Update status produksi\n";
+        $message .= "• Siapkan untuk proses\n\n";
+        $message .= "🔗 *Kelola Order:*\n";
+        $message .= "$adminOrderUrl\n\n";
+        $message .= "_Notifikasi otomatis dari sistem PO Kaligrafi_";
+        
+        $result = $this->sendMessage($adminNumber, $message);
+        $this->logNotification($order->id, 'admin_payment_success', $message, $result['success'] ?? false);
         
         return $result;
     }
