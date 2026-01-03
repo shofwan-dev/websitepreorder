@@ -523,11 +523,13 @@ class ProductionManagerController extends Controller
         ];
         
         if (isset($statusMessages[$newStatus]) && $order->customer && $order->customer->phone) {
+            $siteName = \App\Models\Setting::getValue('site_name', 'website') ?: 'PO Kaligrafi';
+            
             $message = "Assalamu'alaikum " . $order->customer->name . ",\n\n";
             $message .= $statusMessages[$newStatus] . "\n";
             $message .= "No. Pesanan: #" . $order->id . "\n";
             $message .= "Produk: " . ($order->product->name ?? 'N/A') . "\n\n";
-            $message .= "Terima kasih telah memesan di PO Kaligrafi Lampu.";
+            $message .= "Terima kasih telah memesan di " . $siteName . ".";
             
             $whatsappService->sendMessage($order->customer->phone, $message);
         }

@@ -38,6 +38,11 @@ class SettingController extends Controller
             'twitter' => ['nullable', 'string', 'max:100'],
             'business_hours' => ['nullable', 'string', 'max:255'],
             'address' => ['nullable', 'string', 'max:1000'],
+            'free_shipping_code' => ['nullable', 'string', 'max:50', 'regex:/^[A-Z0-9]+$/'],
+            'rajaongkir_api_key' => ['nullable', 'string', 'max:255'],
+            'rajaongkir_base_url' => ['nullable', 'url', 'max:500'],
+            'rajaongkir_account_type' => ['nullable', 'in:starter,basic,pro'],
+            'rajaongkir_origin_city' => ['nullable', 'string', 'max:10'],
             'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg,svg,ico,webp', 'max:2048'],
         ]);
 
@@ -53,6 +58,11 @@ class SettingController extends Controller
         Setting::setValue('twitter', $validated['twitter'] ?? '', 'website');
         Setting::setValue('business_hours', $validated['business_hours'] ?? '', 'website');
         Setting::setValue('address', $validated['address'] ?? '', 'website');
+        Setting::setValue('free_shipping_code', strtoupper($validated['free_shipping_code'] ?? ''), 'website');
+        Setting::setValue('rajaongkir_api_key', $validated['rajaongkir_api_key'] ?? '', 'website');
+        Setting::setValue('rajaongkir_base_url', $validated['rajaongkir_base_url'] ?? '', 'website');
+        Setting::setValue('rajaongkir_account_type', $validated['rajaongkir_account_type'] ?? 'starter', 'website');
+        Setting::setValue('rajaongkir_origin_city', $validated['rajaongkir_origin_city'] ?? '151', 'website');
 
         // Handle logo upload
         if ($request->hasFile('logo')) {

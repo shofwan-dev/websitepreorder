@@ -1,15 +1,20 @@
 @extends('layouts.app')
 
-@section('title', 'Buat Order Baru - ' . ($site_settings['site_name'] ?? 'PO Kaligrafi'))
+@section('title', 'Edit Order #' . $order->id . ' - ' . ($site_settings['site_name'] ?? 'PO Kaligrafi'))
 
 @section('content')
 <div class="min-vh-100 py-4" style="background: linear-gradient(135deg, #fef9e7 0%, #ffffff 100%);">
     <div class="container py-4">
-        <div class="mb-4">
-            <h1 class="h3 fw-bold mb-1" style="color: #8b6b2d;">
-                <i class="fas fa-shopping-cart me-2"></i> Ikut Pre-Order
-            </h1>
-            <p class="text-muted mb-0">Pilih produk dan lengkapi data pemesanan</p>
+        <div class="mb-4 d-flex align-items-center justify-content-between">
+            <div>
+                <h1 class="h3 fw-bold mb-1" style="color: #8b6b2d;">
+                    <i class="fas fa-edit me-2"></i> Edit Order #{{ $order->id }}
+                </h1>
+                <p class="text-muted mb-0">Perbarui data pemesanan Anda</p>
+            </div>
+            <a href="{{ route('user.orders.show', $order) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i> Kembali
+            </a>
         </div>
 
         @php
@@ -55,63 +60,23 @@
                                     <i class="fas fa-copy"></i> Salin Kode
                                 </button>
                             </div>
-                            <small class="text-white opacity-75 d-block mt-2">
-                                <i class="fas fa-users"></i> 
-                                <span id="users-count">{{ rand(234, 567) }}</span> orang sudah pakai kode ini hari ini!
-                            </small>
                         </div>
                         <div class="col-md-4 text-center">
                             <div class="position-relative">
                                 <div class="display-1 text-warning fw-bold mb-0" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
                                     <i class="fas fa-shipping-fast"></i>
                                 </div>
-                                <div class="badge bg-danger position-absolute top-0 end-0 px-3 py-2 fs-6 animate__animated animate__wobble animate__infinite animate__slow">
-                                    HEMAT<br>Rp 25.000
-                                </div>
                             </div>
-                            <p class="text-white small mb-0 mt-2 opacity-90">
-                                <i class="fas fa-check-circle"></i> Berlaku untuk semua kurir
-                            </p>
                         </div>
                     </div>
                 </div>
-                <div class="card-footer bg-white bg-opacity-10 border-0 py-2">
-                    <div class="row align-items-center text-white small">
-                        <div class="col-md-6">
-                            <i class="fas fa-info-circle"></i> 
-                            Masukkan kode saat checkout untuk gratis ongkir
-                        </div>
-                        <div class="col-md-6 text-md-end">
-                            <i class="fas fa-star text-warning"></i>
-                            <i class="fas fa-star text-warning"></i>
-                            <i class="fas fa-star text-warning"></i>
-                            <i class="fas fa-star text-warning"></i>
-                            <i class="fas fa-star text-warning"></i>
-                            <span class="ms-1">4.9/5 dari 2.345 customer</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Floating Sticky Banner (Mobile) -->
-        <div class="d-md-none position-fixed bottom-0 start-0 end-0 p-2" 
-             style="z-index: 1000; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"
-             id="floating-banner">
-            <div class="d-flex align-items-center justify-content-between text-white px-2">
-                <div class="flex-grow-1">
-                    <small class="fw-bold d-block">🎁 Gratis Ongkir Hari Ini!</small>
-                    <small class="opacity-75">Kode: <strong>{{ $freeShippingCode }}</strong></small>
-                </div>
-                <button class="btn btn-warning btn-sm" onclick="copyCode('{{ $freeShippingCode }}')">
-                    <i class="fas fa-copy"></i> Salin
-                </button>
             </div>
         </div>
         @endif
 
-        <form method="POST" action="{{ route('user.orders.store') }}">
+        <form method="POST" action="{{ route('user.orders.update', $order) }}">
             @csrf
+            @method('PUT')
             
             <div class="row g-4">
                 <!-- Pilih Produk -->
@@ -123,78 +88,52 @@
                             </h5>
                         </div>
                         <div class="card-body">
-                            @if($products->isEmpty())
-                                <div class="text-center py-5">
-                                    <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
-                                    <p class="text-muted">Tidak ada produk tersedia saat ini</p>
-                                </div>
-                            @else
-                                <div class="row g-3">
-                                    @foreach($products as $product)
-                                    <div class="col-md-6">
-                                        <div class="card h-100 product-card border-2 {{ old('product_id', $selectedProduct?->id) == $product->id ? 'border-warning' : '' }}"
-                                             data-product-id="{{ $product->id }}" 
-                                             data-price="{{ $product->price }}">
-                                            @php
-                                                $images = $product->images;
-                                                if (!is_array($images)) {
-                                                    $images = $images ? json_decode($images, true) : [];
-                                                }
-                                                $hasImages = is_array($images) && count($images) > 0;
-                                            @endphp
-                                            
-                                            @if($hasImages)
-                                            <!-- Product Image -->
-                                            <div class="product-order-image">
-                                                <img src="{{ asset('storage/' . $images[0]) }}" 
-                                                     alt="{{ $product->name }}" 
-                                                     class="card-img-top">
-                                            </div>
-                                            @else
-                                            <!-- Placeholder -->
-                                            <div class="product-order-image bg-light d-flex align-items-center justify-content-center">
-                                                <i class="fas fa-image fa-3x text-muted"></i>
-                                            </div>
-                                            @endif
-                                            
-                                            <div class="card-body">
-                                                <div class="form-check">
-                                                    <input class="form-check-input product-radio" type="radio" 
-                                                           name="product_id" value="{{ $product->id }}" 
-                                                           id="product{{ $product->id }}"
-                                                           {{ old('product_id', $selectedProduct?->id) == $product->id ? 'checked' : '' }}
-                                                           required>
-                                                    <label class="form-check-label w-100" for="product{{ $product->id }}">
-                                                        <h6 class="fw-bold mb-1">{{ $product->name }}</h6>
-                                                        <p class="text-primary fw-bold mb-1">
-                                                            Rp {{ number_format($product->price, 0, ',', '.') }}
-                                                        </p>
-                                                        <p class="text-muted small mb-2">{{ Str::limit($product->description, 60) }}</p>
-                                                        <div class="d-flex justify-content-between small">
-                                                            <span class="text-muted">
-                                                                <i class="fas fa-users me-1"></i>
-                                                                {{ $product->current_quota ?? 0 }}/{{ $product->min_quota }} kuota
-                                                            </span>
-                                                            @php
-                                                                $remaining = $product->min_quota - ($product->current_quota ?? 0);
-                                                            @endphp
-                                                            @if($remaining > 0)
-                                                                <span class="text-warning">{{ $remaining }} slot lagi</span>
-                                                            @else
-                                                                <span class="text-success">Kuota terpenuhi!</span>
-                                                            @endif
-                                                        </div>
-                                                    </label>
-                                                </div>
+                            <div class="row g-3">
+                                @foreach($products as $product)
+                                <div class="col-md-6">
+                                    <div class="card h-100 product-card border-2 {{ old('product_id', $order->product_id) == $product->id ? 'border-warning' : '' }}"
+                                         data-product-id="{{ $product->id }}" 
+                                         data-price="{{ $product->price }}">
+                                        @php
+                                            $images = $product->images;
+                                            if (!is_array($images)) {
+                                                $images = $images ? json_decode($images, true) : [];
+                                            }
+                                            $hasImages = is_array($images) && count($images) > 0;
+                                        @endphp
+                                        
+                                        @if($hasImages)
+                                        <div class="product-order-image">
+                                            <img src="{{ asset('storage/' . $images[0]) }}" 
+                                                 alt="{{ $product->name }}" 
+                                                 class="card-img-top">
+                                        </div>
+                                        @else
+                                        <div class="product-order-image bg-light d-flex align-items-center justify-content-center">
+                                            <i class="fas fa-image fa-3x text-muted"></i>
+                                        </div>
+                                        @endif
+                                        
+                                        <div class="card-body">
+                                            <div class="form-check">
+                                                <input class="form-check-input product-radio" type="radio" 
+                                                       name="product_id" value="{{ $product->id }}" 
+                                                       id="product{{ $product->id }}"
+                                                       {{ old('product_id', $order->product_id) == $product->id ? 'checked' : '' }}
+                                                       required>
+                                                <label class="form-check-label w-100" for="product{{ $product->id }}">
+                                                    <h6 class="fw-bold mb-1">{{ $product->name }}</h6>
+                                                    <p class="text-primary fw-bold mb-1">
+                                                        Rp {{ number_format($product->price, 0, ',', '.') }}
+                                                    </p>
+                                                    <p class="text-muted small mb-0">{{ Str::limit($product->description, 60) }}</p>
+                                                </label>
                                             </div>
                                         </div>
                                     </div>
-                                    @endforeach
                                 </div>
-                                @error('product_id')
-                                    <div class="text-danger mt-2">{{ $message }}</div>
-                                @enderror
-                            @endif
+                                @endforeach
+                            </div>
                         </div>
                     </div>
 
@@ -211,7 +150,7 @@
                                     <label for="customer_name" class="form-label">Nama Lengkap <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control @error('customer_name') is-invalid @enderror" 
                                            id="customer_name" name="customer_name" 
-                                           value="{{ old('customer_name', Auth::user()->name) }}" required>
+                                           value="{{ old('customer_name', $order->customer_name) }}" required>
                                     @error('customer_name')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -220,7 +159,7 @@
                                     <label for="customer_phone" class="form-label">No. WhatsApp <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control @error('customer_phone') is-invalid @enderror" 
                                            id="customer_phone" name="customer_phone" 
-                                           value="{{ old('customer_phone', Auth::user()->phone) }}" 
+                                           value="{{ old('customer_phone', $order->customer_phone) }}" 
                                            placeholder="08xxxxxxxxxx" required>
                                     @error('customer_phone')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -230,7 +169,7 @@
                                     <label for="quantity" class="form-label">Jumlah <span class="text-danger">*</span></label>
                                     <input type="number" class="form-control @error('quantity') is-invalid @enderror" 
                                            id="quantity" name="quantity" 
-                                           value="{{ old('quantity', 1) }}" min="1" required>
+                                           value="{{ old('quantity', $order->quantity) }}" min="1" required>
                                     @error('quantity')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -241,7 +180,7 @@
                                             id="province_id" name="province_id" required>
                                         <option value="">Pilih Provinsi</option>
                                     </select>
-                                    <input type="hidden" name="province_name" id="province_name">
+                                    <input type="hidden" name="province_name" id="province_name" value="{{ old('province_name', $order->province_name) }}">
                                     @error('province_id')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -252,7 +191,7 @@
                                             id="city_id" name="city_id" required disabled>
                                         <option value="">Pilih Kota</option>
                                     </select>
-                                    <input type="hidden" name="city_name" id="city_name">
+                                    <input type="hidden" name="city_name" id="city_name" value="{{ old('city_name', $order->city_name) }}">
                                     @error('city_id')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -262,9 +201,9 @@
                                     <select class="form-select @error('courier') is-invalid @enderror" 
                                             id="courier" name="courier" required>
                                         <option value="">Pilih Kurir</option>
-                                        <option value="jne">JNE</option>
-                                        <option value="pos">POS Indonesia</option>
-                                        <option value="tiki">TIKI</option>
+                                        <option value="jne" {{ old('courier', $order->courier) == 'jne' ? 'selected' : '' }}>JNE</option>
+                                        <option value="pos" {{ old('courier', $order->courier) == 'pos' ? 'selected' : '' }}>POS Indonesia</option>
+                                        <option value="tiki" {{ old('courier', $order->courier) == 'tiki' ? 'selected' : '' }}>TIKI</option>
                                     </select>
                                     @error('courier')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -284,7 +223,7 @@
                                     <label for="customer_address" class="form-label">Alamat Lengkap <span class="text-danger">*</span></label>
                                     <textarea class="form-control @error('customer_address') is-invalid @enderror" 
                                               id="customer_address" name="customer_address" rows="3" 
-                                              placeholder="Masukkan alamat lengkap beserta kode pos" required>{{ old('customer_address') }}</textarea>
+                                              placeholder="Masukkan alamat lengkap beserta kode pos" required>{{ old('customer_address', $order->customer_address) }}</textarea>
                                     @error('customer_address')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -293,7 +232,7 @@
                                     <label for="notes" class="form-label">Catatan (Opsional)</label>
                                     <textarea class="form-control @error('notes') is-invalid @enderror" 
                                               id="notes" name="notes" rows="2" 
-                                              placeholder="Catatan tambahan untuk pesanan">{{ old('notes') }}</textarea>
+                                              placeholder="Catatan tambahan untuk pesanan">{{ old('notes', $order->notes) }}</textarea>
                                     @error('notes')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -308,39 +247,40 @@
                     <div class="card border-0 shadow-sm sticky-top" style="top: 20px;">
                         <div class="card-header bg-white border-0 py-3">
                             <h5 class="card-title mb-0 fw-bold" style="color: #8b6b2d;">
-                                <i class="fas fa-receipt me-2"></i> Ringkasan
+                                <i class="fas fa-receipt me-2"></i> Ringkasan Perubahan
                             </h5>
                         </div>
                         <div class="card-body">
                             <div class="d-flex justify-content-between mb-2">
                                 <span class="text-muted">Produk:</span>
-                                <span id="summary-product">-</span>
+                                <span id="summary-product">{{ $order->product->name }}</span>
                             </div>
                             <div class="d-flex justify-content-between mb-2">
                                 <span class="text-muted">Harga:</span>
-                                <span id="summary-price">Rp 0</span>
+                                <span id="summary-price">Rp {{ number_format($order->price, 0, ',', '.') }}</span>
                             </div>
                             <div class="d-flex justify-content-between mb-2">
                                 <span class="text-muted">Jumlah:</span>
-                                <span id="summary-qty">1</span>
+                                <span id="summary-qty">{{ $order->quantity }}</span>
                             </div>
                             <div class="d-flex justify-content-between mb-2">
                                 <span class="text-muted">Subtotal:</span>
-                                <span id="summary-subtotal">Rp 0</span>
+                                <span id="summary-subtotal">Rp {{ number_format($order->amount, 0, ',', '.') }}</span>
                             </div>
                             <div class="d-flex justify-content-between mb-2">
                                 <span class="text-muted">Ongkir:</span>
-                                <span id="summary-shipping">Rp 0</span>
+                                <span id="summary-shipping">Rp {{ number_format($order->shipping_cost, 0, ',', '.') }}</span>
                             </div>
-                            <div class="d-flex justify-content-between mb-2 d-none" id="discount-row">
+                            <div class="d-flex justify-content-between mb-2 {{ $order->free_shipping_code ? '' : 'd-none' }}" id="discount-row">
                                 <span class="text-success">Voucher:</span>
-                                <span id="summary-discount" class="text-success">- Rp 0</span>
+                                <span id="summary-discount" class="text-success">- Rp {{ number_format($order->shipping_cost, 0, ',', '.') }}</span>
                             </div>
                             <div class="mb-3">
                                 <label for="free_shipping_code_input" class="form-label small fw-bold text-muted">Kode Promo / Gratis Ongkir</label>
                                 <div class="input-group input-group-sm">
                                     <input type="text" class="form-control" id="free_shipping_code_input" 
-                                           name="applied_free_shipping_code" placeholder="Punya kode?">
+                                           name="applied_free_shipping_code" placeholder="Punya kode?"
+                                           value="{{ old('applied_free_shipping_code', $order->free_shipping_code) }}">
                                     <button class="btn btn-outline-primary" type="button" id="btn-apply-code">Pakai</button>
                                 </div>
                                 <div id="code-feedback" class="small mt-1 d-none"></div>
@@ -349,22 +289,21 @@
                             <hr>
                             <div class="d-flex justify-content-between mb-3 text-primary">
                                 <span class="fw-bold">Total Tagihan:</span>
-                                <span class="fw-bold fs-5" id="summary-total">Rp 0</span>
+                                <span class="fw-bold fs-5" id="summary-total">Rp {{ number_format($order->total_amount, 0, ',', '.') }}</span>
                             </div>
                             
-                            <div class="alert alert-success border-0 small mb-3 py-2" id="shipping-success-info" style="display: none;">
+                            <div class="alert alert-success border-0 small mb-3 py-2" id="shipping-success-info" style="{{ $order->shipping_cost > 0 ? '' : 'display: none;' }}">
                                 <i class="fas fa-check-circle me-1"></i>
                                 Ongkos kirim berhasil dihitung!
                             </div>
                             
                             <button type="submit" class="btn w-100 text-white fw-semibold py-2" 
-                                    style="background: linear-gradient(135deg, #d4a017 0%, #f4c542 100%);"
-                                    {{ $products->isEmpty() ? 'disabled' : '' }}>
-                                <i class="fas fa-paper-plane me-2"></i> Buat Order
+                                    style="background: linear-gradient(135deg, #d4a017 0%, #f4c542 100%);">
+                                <i class="fas fa-save me-2"></i> Simpan Perubahan
                             </button>
                             
                             <p class="text-muted small text-center mt-3 mb-0">
-                                Dengan memesan, Anda menyetujui syarat dan ketentuan yang berlaku.
+                                Pastikan data sudah benar sebelum menyimpan.
                             </p>
                         </div>
                     </div>
@@ -390,10 +329,6 @@
         object-fit: cover;
         object-position: center;
         transition: transform 0.3s ease;
-    }
-    
-    .product-card:hover .product-order-image img {
-        transform: scale(1.05);
     }
     
     .product-card {
@@ -424,10 +359,14 @@
         const btnApplyCode = document.getElementById('btn-apply-code');
         const codeInput = document.getElementById('free_shipping_code_input');
 
-        let selectedPrice = 0;
-        let shippingCost = 0;
-        let discountAmount = 0;
-        let isFreeShipping = false;
+        let selectedPrice = {{ $order->price }};
+        let shippingCost = {{ $order->shipping_cost }};
+        let discountAmount = {{ $order->free_shipping_code ? $order->shipping_cost : 0 }};
+        let isFreeShipping = {{ $order->free_shipping_code ? 'true' : 'false' }};
+        
+        let initialProvinceId = "{{ old('province_id', $order->province_id) }}";
+        let initialCityId = "{{ old('city_id', $order->city_id) }}";
+        let initialService = "{{ old('courier_service', $order->courier_service) }}";
 
         function formatRupiah(number) {
             return 'Rp ' + number.toLocaleString('id-ID');
@@ -437,7 +376,6 @@
             const qty = parseInt(quantityInput.value) || 1;
             const subtotal = selectedPrice * qty;
             
-            // Check if free shipping is active
             if (isFreeShipping) {
                 discountAmount = shippingCost;
                 document.getElementById('discount-row').classList.remove('d-none');
@@ -468,73 +406,75 @@
                     result.data.forEach(province => {
                         // Komerce API uses 'id' and 'name' fields
                         const option = new Option(province.name, province.id);
+                        if (province.id == initialProvinceId) {
+                            option.selected = true;
+                        }
                         provinceSelect.add(option);
                     });
+                    
+                    if (initialProvinceId) {
+                        loadCities(initialProvinceId, initialCityId);
+                    }
                 } else {
                     console.error('Provinces Error Status:', result.message);
-                    if (result.message && result.message.includes('API Key')) {
-                        showToast('Konfigurasi Kurir Belum Selesai: ' + result.message, 'error');
-                    }
+                    alert('Gagal memuat data provinsi: ' + (result.message || 'Unknown error'));
                 }
             })
             .catch(error => {
                 console.error('Error fetching provinces:', error);
-                showToast('Gagal memuat data provinsi. Silakan refresh halaman.', 'error');
             });
 
-        // Province Change
-        provinceSelect.addEventListener('change', function() {
-            const provinceId = this.value;
+        function loadCities(provinceId, selectedCityId = null) {
             citySelect.innerHTML = '<option value="">Pilih Kota</option>';
             citySelect.disabled = true;
-            serviceSelect.innerHTML = '<option value="">Pilih Layanan</option>';
-            serviceSelect.disabled = true;
-            shippingCost = 0;
             
-            if (provinceId) {
-                document.getElementById('province_name').value = this.options[this.selectedIndex].text;
-                fetch(`{{ url('my/shipping/cities') }}/${provinceId}`)
-                    .then(response => response.json())
-                    .then(result => {
-                        if (result.success) {
-                            result.data.forEach(city => {
-                                // Komerce API uses 'id' and 'name' fields
-                                const option = new Option(city.name, city.id);
-                                citySelect.add(option);
-                            });
-                            citySelect.disabled = false;
+            fetch(`{{ url('my/shipping/cities') }}/${provinceId}`)
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        result.data.forEach(city => {
+                            // Komerce API uses 'id' and 'name' fields
+                            const option = new Option(city.name, city.id);
+                            if (selectedCityId && city.id == selectedCityId) {
+                                option.selected = true;
+                            }
+                            citySelect.add(option);
+                        });
+                        citySelect.disabled = false;
+                        
+                        if (selectedCityId && courierSelect.value) {
+                            calculateShipping(initialService);
                         }
-                    });
-            }
-            updateSummary();
-        });
+                    }
+                });
+        }
 
-        // City Change
-        citySelect.addEventListener('change', function() {
+        provinceSelect.addEventListener('change', function() {
             if (this.value) {
-                document.getElementById('city_name').value = this.options[this.selectedIndex].text;
-                if (courierSelect.value) {
-                    calculateShipping();
-                }
-            }
-        });
-
-        // Courier Change
-        courierSelect.addEventListener('change', function() {
-            if (this.value && citySelect.value) {
-                calculateShipping();
+                document.getElementById('province_name').value = this.options[this.selectedIndex].text;
+                loadCities(this.value);
             } else {
-                serviceSelect.innerHTML = '<option value="">Pilih Layanan</option>';
-                serviceSelect.disabled = true;
+                citySelect.disabled = true;
                 shippingCost = 0;
                 updateSummary();
             }
         });
 
-        function calculateShipping() {
+        citySelect.addEventListener('change', function() {
+            if (this.value) {
+                document.getElementById('city_name').value = this.options[this.selectedIndex].text;
+                if (courierSelect.value) calculateShipping();
+            }
+        });
+
+        courierSelect.addEventListener('change', function() {
+            if (this.value && citySelect.value) calculateShipping();
+        });
+
+        function calculateShipping(selectedService = null) {
             const formData = new FormData();
             formData.append('destination', citySelect.value);
-            formData.append('weight', 1000 * (parseInt(quantityInput.value) || 1)); // Assuming 1kg per item
+            formData.append('weight', 1000 * (parseInt(quantityInput.value) || 1));
             formData.append('courier', courierSelect.value);
             formData.append('_token', '{{ csrf_token() }}');
 
@@ -558,9 +498,13 @@
                                 item.service
                             );
                             option.dataset.price = item.cost;
+                            if (selectedService && item.service == selectedService) {
+                                option.selected = true;
+                                shippingCost = item.cost;
+                                document.getElementById('shipping-success-info').style.display = 'block';
+                            }
                             serviceSelect.add(option);
                         });
-                        serviceSelect.disabled = false;
                     } else if (result.data[0].costs !== undefined) {
                         // Official RajaOngkir structure
                         result.data[0].costs.forEach(item => {
@@ -569,47 +513,37 @@
                                 item.service
                             );
                             option.dataset.price = item.cost[0].value;
+                            if (selectedService && item.service == selectedService) {
+                                option.selected = true;
+                                shippingCost = item.cost[0].value;
+                                document.getElementById('shipping-success-info').style.display = 'block';
+                            }
                             serviceSelect.add(option);
                         });
-                        serviceSelect.disabled = false;
                     }
-                } else {
-                    serviceSelect.innerHTML = '<option value="">Layanan tidak tersedia</option>';
+                    serviceSelect.disabled = false;
+                    updateSummary();
                 }
             });
         }
 
-        // Service Change
         serviceSelect.addEventListener('change', function() {
-            const selectedOption = this.options[this.selectedIndex];
-            if (selectedOption.dataset.price) {
-                shippingCost = parseInt(selectedOption.dataset.price);
-                document.getElementById('shipping-success-info').style.display = 'block';
-            } else {
-                shippingCost = 0;
-                document.getElementById('shipping-success-info').style.display = 'none';
-            }
+            const opt = this.options[this.selectedIndex];
+            shippingCost = opt.dataset.price ? parseInt(opt.dataset.price) : 0;
+            document.getElementById('shipping-success-info').style.display = shippingCost > 0 ? 'block' : 'none';
             updateSummary();
         });
 
-        // Apply Voucher Code
         btnApplyCode.addEventListener('click', function() {
             const code = codeInput.value.trim();
             const feedback = document.getElementById('code-feedback');
-            
             if (!code) return;
-
             btnApplyCode.disabled = true;
-            btnApplyCode.textContent = '...';
-
             const formData = new FormData();
             formData.append('code', code);
             formData.append('_token', '{{ csrf_token() }}');
 
-            fetch('{{ route('user.shipping.validate-code') }}', {
-                method: 'POST',
-                body: formData
-            })
+            fetch('{{ route('user.shipping.validate-code') }}', { method: 'POST', body: formData })
             .then(response => response.json())
             .then(result => {
                 feedback.classList.remove('d-none', 'text-success', 'text-danger');
@@ -617,108 +551,45 @@
                     isFreeShipping = true;
                     feedback.textContent = result.message;
                     feedback.classList.add('text-success');
-                    showToast(result.message, 'success');
                 } else {
                     isFreeShipping = false;
                     feedback.textContent = result.message;
                     feedback.classList.add('text-danger');
-                    showToast(result.message, 'error');
                 }
                 updateSummary();
             })
-            .finally(() => {
-                btnApplyCode.disabled = false;
-                btnApplyCode.textContent = 'Pakai';
-            });
+            .finally(() => { btnApplyCode.disabled = false; });
         });
 
         productCards.forEach(card => {
             card.addEventListener('click', function() {
-                const radio = this.querySelector('.product-radio');
-                radio.checked = true;
-                
                 productCards.forEach(c => c.classList.remove('selected', 'border-warning'));
                 this.classList.add('selected', 'border-warning');
-                
+                this.querySelector('.product-radio').checked = true;
                 selectedPrice = parseInt(this.dataset.price);
-                const productName = this.querySelector('h6').textContent;
-                
-                document.getElementById('summary-product').textContent = productName;
+                document.getElementById('summary-product').textContent = this.querySelector('h6').textContent;
                 document.getElementById('summary-price').textContent = formatRupiah(selectedPrice);
-                
                 updateSummary();
-                if (citySelect.value && courierSelect.value) {
-                    calculateShipping();
-                }
+                if (citySelect.value && courierSelect.value) calculateShipping();
             });
-        });
-
         });
 
         quantityInput.addEventListener('input', function() {
             updateSummary();
             if (citySelect.value && courierSelect.value) {
-                calculateShipping();
+                calculateShipping(serviceSelect.value);
             }
         });
-
-        // Initialize if product is already selected
-        const checkedRadio = document.querySelector('.product-radio:checked');
-        if (checkedRadio) {
-            checkedRadio.closest('.product-card').click();
-        }
     });
 
-    // Copy code function
     function copyCode(code) {
-        navigator.clipboard.writeText(code).then(function() {
-            // Show success message
-            const btn = event.target.closest('button');
-            const originalHTML = btn ? btn.innerHTML : '';
-            
-            if (btn) {
-                btn.innerHTML = '<i class="fas fa-check"></i> Tersalin!';
-                btn.classList.remove('btn-warning');
-                btn.classList.add('btn-success');
-                
-                setTimeout(function() {
-                    btn.innerHTML = originalHTML;
-                    btn.classList.remove('btn-success');
-                    btn.classList.add('btn-warning');
-                }, 2000);
-            }
-            
-            // Show toast notification
-            showToast('Kode berhasil disalin!', 'success');
-        }).catch(function(err) {
-            showToast('Gagal menyalin kode', 'error');
+        navigator.clipboard.writeText(code).then(() => {
+            const codeEl = document.getElementById('shipping-code');
+            const originalText = codeEl.textContent;
+            codeEl.textContent = 'TERSALIN!';
+            setTimeout(() => { codeEl.textContent = originalText; }, 2000);
         });
     }
-
-    // Toast notification
-    function showToast(message, type = 'success') {
-        const toast = document.createElement('div');
-        toast.className = `alert alert-${type === 'success' ? 'success' : 'danger'} position-fixed top-0 start-50 translate-middle-x mt-3`;
-        toast.style.zIndex = '9999';
-        toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${message}`;
-        document.body.appendChild(toast);
-        
-        setTimeout(() => {
-            toast.remove();
-        }, 3000);
-    }
-
-    // Animate user count
-    @if(!empty($site_settings['free_shipping_code'] ?? ''))
-    setInterval(function() {
-        const countEl = document.getElementById('users-count');
-        if (countEl) {
-            const currentCount = parseInt(countEl.textContent);
-            const newCount = currentCount + Math.floor(Math.random() * 3);
-            countEl.textContent = newCount;
-        }
-    }, 15000); // Update every 15 seconds
-    @endif
 </script>
 @endpush
 @endsection

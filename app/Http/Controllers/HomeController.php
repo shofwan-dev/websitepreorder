@@ -346,8 +346,10 @@ class HomeController extends Controller
      */
     public function about()
     {
+        $siteName = \App\Models\Setting::getValue('site_name', 'website') ?: 'PO Kaligrafi';
+        
         return view('about', [
-            'title' => 'Tentang PO Kaligrafi Lampu',
+            'title' => 'Tentang ' . $siteName,
             'description' => 'Kami adalah pengrajin kaligrafi lampu yang berdedikasi menciptakan karya seni islami dengan kualitas terbaik.'
         ]);
     }

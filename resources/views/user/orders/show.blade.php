@@ -91,13 +91,34 @@
                                 <strong>{{ $order->customer_phone ?? '-' }}</strong>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <span class="text-muted small d-block">Kota</span>
-                                <strong>{{ $order->customer_city ?? '-' }}</strong>
+                                <span class="text-muted small d-block">Kota & Provinsi</span>
+                                <strong>{{ $order->city_name ?? $order->customer_city }}, {{ $order->province_name ?? '-' }}</strong>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <span class="text-muted small d-block">Metode Pengiriman</span>
+                                <strong>
+                                    @if($order->courier)
+                                        {{ strtoupper($order->courier) }} - {{ $order->courier_service }}
+                                    @else
+                                        -
+                                    @endif
+                                </strong>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <span class="text-muted small d-block">Tanggal Order</span>
                                 <strong>{{ $order->created_at->format('d M Y, H:i') }}</strong>
                             </div>
+                            @if($order->tracking_number)
+                            <div class="col-md-6 mb-3">
+                                <span class="text-muted small d-block">Nomor Resi</span>
+                                <div class="d-flex align-items-center">
+                                    <strong class="text-primary me-2">{{ $order->tracking_number }}</strong>
+                                    <button class="btn btn-sm btn-outline-secondary py-0" onclick="copyTracking('{{ $order->tracking_number }}')">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            @endif
                             <div class="col-12">
                                 <span class="text-muted small d-block">Alamat Lengkap</span>
                                 <strong>{{ $order->customer_address ?? '-' }}</strong>
@@ -155,22 +176,28 @@
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-white border-0 py-3">
                         <h5 class="card-title mb-0 fw-bold" style="color: #8b6b2d;">
-                            <i class="fas fa-credit-card me-2"></i> Ringkasan Pembayaran
+                            <i class="fas fa-receipt me-2"></i> Rincian Tagihan
                         </h5>
                     </div>
                     <div class="card-body">
                         <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted">Subtotal</span>
-                            <span>Rp {{ number_format(($order->price ?? 0) * ($order->quantity ?? 1), 0, ',', '.') }}</span>
+                            <span class="text-muted">Subtotal ({{ $order->quantity }} pcs)</span>
+                            <strong>Rp {{ number_format($order->amount, 0, ',', '.') }}</strong>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted">Ongkir</span>
-                            <span class="text-muted">Dihitung nanti</span>
+                            <span class="text-muted">Ongkos Kirim</span>
+                            <strong>Rp {{ number_format($order->shipping_cost, 0, ',', '.') }}</strong>
                         </div>
+                        @if($order->free_shipping_code)
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-success">Voucher ({{ $order->free_shipping_code }})</span>
+                            <strong class="text-success">- Rp {{ number_format($order->shipping_cost, 0, ',', '.') }}</strong>
+                        </div>
+                        @endif
                         <hr>
-                        <div class="d-flex justify-content-between mb-3">
-                            <strong>Total</strong>
-                            <strong class="text-primary fs-5">Rp {{ number_format($order->total_amount ?? 0, 0, ',', '.') }}</strong>
+                        <div class="d-flex justify-content-between mb-3 text-primary">
+                            <span class="fw-bold fs-5">Total Tagihan</span>
+                            <strong class="fw-bold fs-4">Rp {{ number_format($order->total_amount, 0, ',', '.') }}</strong>
                         </div>
                         
                         <div class="mb-3">
@@ -266,6 +293,12 @@
                                 Silakan lakukan pembayaran untuk memproses pesanan Anda.
                             </div>
                             
+                            <!-- Edit Order Button -->
+                            <a href="{{ route('user.orders.edit', $order) }}" 
+                               class="btn btn-outline-primary btn-sm w-100 mb-2">
+                                <i class="fas fa-edit me-1"></i> Edit Data Pesanan
+                            </a>
+
                             <!-- Cancel Order Button -->
                             <button type="button" 
                                     class="btn btn-outline-danger btn-sm w-100" 

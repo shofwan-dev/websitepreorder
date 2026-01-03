@@ -19,6 +19,14 @@ class WhatsAppService
         $this->sender = Setting::getValue('whatsapp_sender') ?: config('services.whatsapp.sender');
         $this->baseUrl = Setting::getValue('whatsapp_endpoint') ?: 'https://wa.mutekar.com/send-message';
     }
+    
+    /**
+     * Get site name from settings
+     */
+    private function getSiteName(): string
+    {
+        return Setting::getValue('site_name', 'website') ?: 'PO Kaligrafi';
+    }
 
     /**
      * Kirim pesan WhatsApp ke pelanggan
@@ -225,7 +233,7 @@ class WhatsAppService
     public function testConnection(): array  // ✅ TAMBAHKAN RETURN TYPE
     {
         try {
-            $testMessage = 'Test koneksi API WhatsApp PO Kaligrafi';
+            $testMessage = 'Test koneksi API WhatsApp ' . $this->getSiteName();
             
             // Coba ping API tanpa mengirim pesan
             $response = Http::timeout(10)->get($this->baseUrl);
@@ -356,7 +364,7 @@ class WhatsAppService
         $message .= "Menunggu pembayaran dari customer\n\n";
         $message .= "🔗 *Lihat Detail:*\n";
         $message .= "$adminOrderUrl\n\n";
-        $message .= "_Notifikasi otomatis dari sistem PO Kaligrafi_";
+        $message .= "_Notifikasi otomatis dari sistem " . $this->getSiteName() . "_";
         
         $result = $this->sendMessage($adminNumber, $message);
         $this->logNotification($order->id, 'admin_new_order', $message, $result['success'] ?? false);
@@ -496,7 +504,7 @@ class WhatsAppService
         $message .= "• Siapkan untuk proses\n\n";
         $message .= "🔗 *Kelola Order:*\n";
         $message .= "$adminOrderUrl\n\n";
-        $message .= "_Notifikasi otomatis dari sistem PO Kaligrafi_";
+        $message .= "_Notifikasi otomatis dari sistem " . $this->getSiteName() . "_";
         
         $result = $this->sendMessage($adminNumber, $message);
         $this->logNotification($order->id, 'admin_payment_success', $message, $result['success'] ?? false);

@@ -180,10 +180,96 @@
                                 Nomor untuk menerima notifikasi order baru (bisa berbeda dari WhatsApp publik)
                             </div>
                         </div>
+                    </div> <!-- Row for WhatsApp closed here -->
+                    
+                    <!-- Free Shipping Code Section -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="alert alert-info border-0 shadow-sm">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-shipping-fast fa-2x me-3 text-primary"></i>
+                                    <div>
+                                        <h6 class="mb-1 fw-bold">🎁 Kode Gratis Ongkir (Marketing Tool)</h6>
+                                        <small>Buat kode khusus untuk customer yang beruntung! Meningkatkan konversi hingga 40%</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-gift text-success me-1"></i>
+                                Kode Gratis Ongkir
+                            </label>
+                            <input type="text" 
+                                   class="form-control @error('free_shipping_code') is-invalid @enderror" 
+                                   name="free_shipping_code" 
+                                   value="{{ old('free_shipping_code', $settings['free_shipping_code'] ?? '') }}"
+                                   placeholder="Contoh: GRATISONGKIR2026"
+                                   style="text-transform: uppercase;">
+                            @error('free_shipping_code')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <div class="form-text">
+                                <i class="fas fa-lightbulb me-1 text-warning"></i>
+                                <strong>Tips Marketing:</strong> Gunakan kode yang mudah diingat dan menciptakan urgency
+                            </div>
+                        </div>
                         
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-percentage text-danger me-1"></i>
+                                Status Kode
+                            </label>
+                            <div class="form-control bg-light border-0" style="height: auto; padding: 0.75rem;">
+                                @if(!empty($settings['free_shipping_code']))
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge bg-success me-2">
+                                            <i class="fas fa-check-circle"></i> AKTIF
+                                        </span>
+                                        <span class="text-muted small">
+                                            Kode "<strong class="text-success">{{ $settings['free_shipping_code'] }}</strong>" akan ditampilkan di halaman order
+                                        </span>
+                                    </div>
+                                @else
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge bg-secondary me-2">
+                                            <i class="fas fa-times-circle"></i> TIDAK AKTIF
+                                        </span>
+                                        <span class="text-muted small">
+                                            Notifikasi gratis ongkir tidak akan ditampilkan
+                                        </span>
+                                    </div>
+                                @endif
+                            </div>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Kosongkan untuk menonaktifkan promo gratis ongkir
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card border-warning bg-warning bg-opacity-10">
+                                <div class="card-body">
+                                    <h6 class="card-title text-warning mb-2">
+                                        <i class="fas fa-star"></i> Psikologi Marketing - Gratis Ongkir
+                                    </h6>
+                                    <ul class="mb-0 small">
+                                        <li><strong>FOMO (Fear of Missing Out):</strong> "Buruan! Gratis ongkir terbatas!"</li>
+                                        <li><strong>Eksklusivitas:</strong> "Kode khusus untuk customer setia"</li>
+                                        <li><strong>Urgency:</strong> Kombinasikan dengan countdown timer</li>
+                                        <li><strong>Social Proof:</strong> "1.234 customer sudah pakai kode ini!"</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-semibold">Instagram</label>
                             <input type="text" 
@@ -260,6 +346,82 @@
                         @error('address')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
+                    </div>
+
+                    <!-- RajaOngkir Configuration -->
+                    <div class="border-top pt-4 mt-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="fas fa-truck-moving fa-lg me-2 text-primary"></i>
+                            <h5 class="mb-0 fw-bold">Pengaturan RajaOngkir</h5>
+                        </div>
+                        
+                        <div class="alert alert-light border small mb-3">
+                            <i class="fas fa-info-circle me-1 text-info"></i>
+                            Daftar di <a href="https://rajaongkir.com" target="_blank">rajaongkir.com</a> untuk mendapatkan API Key.
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label fw-semibold">API Base URL (Opsional)</label>
+                                <input type="text" 
+                                       class="form-control @error('rajaongkir_base_url') is-invalid @enderror" 
+                                       name="rajaongkir_base_url" 
+                                       id="rajaongkir_base_url"
+                                       value="{{ old('rajaongkir_base_url', $settings['rajaongkir_base_url'] ?? '') }}"
+                                       placeholder="Default: https://api.rajaongkir.com/starter">
+                                <div class="form-text small">
+                                    Gunakan <code>https://rajaongkir.komerce.id/api/v1</code> jika Anda menggunakan API dari Komerce.
+                                </div>
+                                @error('rajaongkir_base_url')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label fw-semibold">RajaOngkir API Key</label>
+                                <input type="password" 
+                                       class="form-control @error('rajaongkir_api_key') is-invalid @enderror" 
+                                       name="rajaongkir_api_key" 
+                                       id="rajaongkir_api_key"
+                                       value="{{ old('rajaongkir_api_key', $settings['rajaongkir_api_key'] ?? '') }}"
+                                       placeholder="Masukkan API Key Anda">
+                                @error('rajaongkir_api_key')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Tipe Akun RajaOngkir</label>
+                                <select class="form-select @error('rajaongkir_account_type') is-invalid @enderror" 
+                                        name="rajaongkir_account_type">
+                                    <option value="starter" {{ old('rajaongkir_account_type', $settings['rajaongkir_account_type'] ?? 'starter') == 'starter' ? 'selected' : '' }}>Starter (Gratis)</option>
+                                    <option value="basic" {{ old('rajaongkir_account_type', $settings['rajaongkir_account_type'] ?? 'starter') == 'basic' ? 'selected' : '' }}>Basic (Berbayar)</option>
+                                    <option value="pro" {{ old('rajaongkir_account_type', $settings['rajaongkir_account_type'] ?? 'starter') == 'pro' ? 'selected' : '' }}>Pro (Berbayar)</option>
+                                </select>
+                                @error('rajaongkir_account_type')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">City ID (Asal Pengiriman)</label>
+                                <input type="text" 
+                                       class="form-control @error('rajaongkir_origin_city') is-invalid @enderror" 
+                                       name="rajaongkir_origin_city" 
+                                       value="{{ old('rajaongkir_origin_city', $settings['rajaongkir_origin_city'] ?? '151') }}"
+                                       placeholder="Contoh: 151 (Bandung)">
+                                @error('rajaongkir_origin_city')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                <div class="form-text small">
+                                    Bandung: 151, Jakarta: 152, Yogyakarta: 419.
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

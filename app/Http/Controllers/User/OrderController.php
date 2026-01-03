@@ -60,23 +60,79 @@ class OrderController extends Controller
             'customer_name' => ['required', 'string', 'max:255'],
             'customer_phone' => ['required', 'string', 'max:20'],
             'customer_address' => ['required', 'string', 'max:500'],
-            'customer_city' => ['required', 'string', 'max:100'],
+            'province_id' => ['required', 'string'],
+            'province_name' => ['required', 'string'],
+            'city_id' => ['required', 'string'],
+            'city_name' => ['required', 'string'],
+            'courier' => ['required', 'string'],
+            'courier_service' => ['required', 'string'],
+            'applied_free_shipping_code' => ['nullable', 'string'],
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
 
         $product = Product::findOrFail($validated['product_id']);
+        
+        // Calculate Shipping on Backend
+        $shippingCost = 0;
+        $rajaOngkir = app(\App\Services\RajaOngkirService::class);
+        $origin = $rajaOngkir->getOriginCityId();
+        
+        $weight = 1000 * $validated['quantity']; // 1kg per item
+        $costResult = $rajaOngkir->calculateCost($origin, $validated['city_id'], $weight, $validated['courier']);
+        
+        if ($costResult['success']) {
+            // Check if this is Komerce API response (flat structure)
+            if (isset($costResult['data'][0]['cost'])) {
+                // Komerce API structure
+                foreach ($costResult['data'] as $service) {
+                    if ($service['service'] == $validated['courier_service']) {
+                        $shippingCost = $service['cost'];
+                        break;
+                    }
+                }
+            } elseif (isset($costResult['data'][0]['costs'])) {
+                // Official RajaOngkir structure
+                foreach ($costResult['data'][0]['costs'] as $service) {
+                    if ($service['service'] == $validated['courier_service']) {
+                        $shippingCost = $service['cost'][0]['value'];
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Apply Free Shipping Code if valid
+        $discountAmount = 0;
+        $activeShippingCode = \App\Models\Setting::getValue('free_shipping_code', 'website');
+        
+        if (!empty($validated['applied_free_shipping_code']) && 
+            !empty($activeShippingCode) && 
+            strtoupper($validated['applied_free_shipping_code']) === strtoupper($activeShippingCode)) {
+            $discountAmount = $shippingCost;
+        }
+
+        $orderAmount = $product->price * $validated['quantity'];
+        $totalAmount = $orderAmount + $shippingCost - $discountAmount;
 
         $order = Order::create([
             'user_id' => Auth::id(),
             'product_id' => $validated['product_id'],
             'quantity' => $validated['quantity'],
             'price' => $product->price,
-            'amount' => $product->price * $validated['quantity'],
-            'total_amount' => $product->price * $validated['quantity'],
+            'amount' => $orderAmount,
+            'shipping_cost' => $shippingCost,
+            'total_amount' => $totalAmount,
             'customer_name' => $validated['customer_name'],
             'customer_phone' => $validated['customer_phone'],
             'customer_address' => $validated['customer_address'],
-            'customer_city' => $validated['customer_city'],
+            'customer_city' => $validated['city_name'],
+            'province_id' => $validated['province_id'],
+            'province_name' => $validated['province_name'],
+            'city_id' => $validated['city_id'],
+            'city_name' => $validated['city_name'],
+            'courier' => $validated['courier'],
+            'courier_service' => $validated['courier_service'],
+            'free_shipping_code' => $discountAmount > 0 ? strtoupper($validated['applied_free_shipping_code']) : null,
             'notes' => $validated['notes'] ?? null,
             'status' => 'pending',
             'payment_status' => 'pending',
@@ -117,6 +173,130 @@ class OrderController extends Controller
         $order->load(['product', 'batch']);
 
         return view('user.orders.show', compact('order'));
+    }
+
+    /**
+     * Show the form for editing the specified order
+     */
+    public function edit(Order $order)
+    {
+        // Ensure user can only edit their own orders
+        if ($order->user_id !== Auth::id()) {
+            abort(403, 'Anda tidak memiliki akses ke order ini.');
+        }
+
+        // Only allow editing if order is still pending payment
+        if ($order->payment_status !== 'pending' || $order->status === 'cancelled') {
+            return redirect()->route('user.orders.show', $order)
+                ->with('error', 'Order yang sudah dibayar atau dibatalkan tidak dapat diubah.');
+        }
+
+        $products = Product::where('is_active', true)->get();
+        $selectedProduct = $order->product;
+
+        return view('user.orders.edit', compact('order', 'products', 'selectedProduct'));
+    }
+
+    /**
+     * Update the specified order
+     */
+    public function update(Request $request, Order $order)
+    {
+        // Ensure user can only update their own orders
+        if ($order->user_id !== Auth::id()) {
+            abort(403, 'Anda tidak memiliki akses ke order ini.');
+        }
+
+        // Only allow updating if order is still pending payment
+        if ($order->payment_status !== 'pending' || $order->status === 'cancelled') {
+            return redirect()->route('user.orders.show', $order)
+                ->with('error', 'Order yang sudah dibayar atau dibatalkan tidak dapat diubah.');
+        }
+
+        $validated = $request->validate([
+            'product_id' => ['required', 'exists:products,id'],
+            'quantity' => ['required', 'integer', 'min:1'],
+            'customer_name' => ['required', 'string', 'max:255'],
+            'customer_phone' => ['required', 'string', 'max:20'],
+            'customer_address' => ['required', 'string', 'max:500'],
+            'province_id' => ['required', 'string'],
+            'province_name' => ['required', 'string'],
+            'city_id' => ['required', 'string'],
+            'city_name' => ['required', 'string'],
+            'courier' => ['required', 'string'],
+            'courier_service' => ['required', 'string'],
+            'applied_free_shipping_code' => ['nullable', 'string'],
+            'notes' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $product = Product::findOrFail($validated['product_id']);
+        
+        // Calculate Shipping on Backend
+        $shippingCost = 0;
+        $rajaOngkir = app(\App\Services\RajaOngkirService::class);
+        $origin = $rajaOngkir->getOriginCityId();
+        
+        $weight = 1000 * $validated['quantity']; // 1kg per item
+        $costResult = $rajaOngkir->calculateCost($origin, $validated['city_id'], $weight, $validated['courier']);
+        
+        if ($costResult['success']) {
+            // Check if this is Komerce API response (flat structure)
+            if (isset($costResult['data'][0]['cost'])) {
+                // Komerce API structure
+                foreach ($costResult['data'] as $service) {
+                    if ($service['service'] == $validated['courier_service']) {
+                        $shippingCost = $service['cost'];
+                        break;
+                    }
+                }
+            } elseif (isset($costResult['data'][0]['costs'])) {
+                // Official RajaOngkir structure
+                foreach ($costResult['data'][0]['costs'] as $service) {
+                    if ($service['service'] == $validated['courier_service']) {
+                        $shippingCost = $service['cost'][0]['value'];
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Apply Free Shipping Code if valid
+        $discountAmount = 0;
+        $activeShippingCode = \App\Models\Setting::getValue('free_shipping_code', 'website');
+        
+        if (!empty($validated['applied_free_shipping_code']) && 
+            !empty($activeShippingCode) && 
+            strtoupper($validated['applied_free_shipping_code']) === strtoupper($activeShippingCode)) {
+            $discountAmount = $shippingCost;
+        }
+
+        $orderAmount = $product->price * $validated['quantity'];
+        $totalAmount = $orderAmount + $shippingCost - $discountAmount;
+
+        $order->update([
+            'product_id' => $validated['product_id'],
+            'quantity' => $validated['quantity'],
+            'price' => $product->price,
+            'amount' => $orderAmount,
+            'shipping_cost' => $shippingCost,
+            'total_amount' => $totalAmount,
+            'customer_name' => $validated['customer_name'],
+            'customer_phone' => $validated['customer_phone'],
+            'customer_address' => $validated['customer_address'],
+            'customer_city' => $validated['city_name'],
+            'province_id' => $validated['province_id'],
+            'province_name' => $validated['province_name'],
+            'city_id' => $validated['city_id'],
+            'city_name' => $validated['city_name'],
+            'courier' => $validated['courier'],
+            'courier_service' => $validated['courier_service'],
+            'free_shipping_code' => $discountAmount > 0 ? strtoupper($validated['applied_free_shipping_code']) : null,
+            'notes' => $validated['notes'] ?? null,
+        ]);
+
+        return redirect()
+            ->route('user.orders.show', $order)
+            ->with('success', 'Order berhasil diperbarui!');
     }
 
     /**

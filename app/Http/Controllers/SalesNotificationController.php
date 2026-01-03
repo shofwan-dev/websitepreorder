@@ -26,27 +26,55 @@ class SalesNotificationController extends Controller
             $censoredName = $this->censorName($name);
             
             // Extract city from address
-            $city = $this->extractCity($order->customer_address ?? $order->customer_city ?? '');
+            $city = $this->extractCity($order->customer_address ?? $order->city_name ?? '');
             
-            // Get product image
-            $productImages = $order->product->images ?? [];
+            // Get product image with proper null checks and format handling
             $productImage = null;
             
-            if (!empty($productImages)) {
-                if (is_array($productImages) && isset($productImages[0])) {
-                    $productImage = asset('storage/' . $productImages[0]);
-                } elseif (is_string($productImages)) {
+            if ($order->product) {
+                $productImages = $order->product->images;
+                
+                // Handle different formats
+                if (is_string($productImages)) {
+                    // Decode JSON string
                     $decoded = json_decode($productImages, true);
-                    if (is_array($decoded) && isset($decoded[0])) {
-                        $productImage = asset('storage/' . $decoded[0]);
+                    if (is_array($decoded) && !empty($decoded)) {
+                        $productImages = $decoded;
+                    } else {
+                        $productImages = [];
+                    }
+                }
+                
+                // Now productImages should be an array
+                if (is_array($productImages) && !empty($productImages) && isset($productImages[0])) {
+                    $imagePath = $productImages[0];
+                    
+                    // Try different possible paths
+                    $possiblePaths = [
+                        storage_path('app/public/' . $imagePath),
+                        storage_path('app/public/products/' . $imagePath),
+                        public_path('storage/' . $imagePath),
+                        public_path('storage/products/' . $imagePath),
+                    ];
+                    
+                    foreach ($possiblePaths as $fullPath) {
+                        if (file_exists($fullPath)) {
+                            // Extract relative path from storage
+                            if (strpos($imagePath, 'products/') === 0) {
+                                $productImage = asset('storage/' . $imagePath);
+                            } else {
+                                $productImage = asset('storage/products/' . $imagePath);
+                            }
+                            break;
+                        }
                     }
                 }
             }
             
-            // Fallback to UI Avatars
+            // Fallback to UI Avatars if no image found
             if (!$productImage) {
-                $productName = urlencode($order->product->name ?? 'Product');
-                $productImage = "https://ui-avatars.com/api/?name={$productName}&size=60&background=d4a017&color=fff";
+                $productName = $order->product ? urlencode($order->product->name) : 'Product';
+                $productImage = "https://ui-avatars.com/api/?name={$productName}&size=60&background=d4a017&color=fff&bold=true";
             }
 
             return [

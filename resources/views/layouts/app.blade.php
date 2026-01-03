@@ -993,8 +993,19 @@
             
             if (!popup) return;
             
-            // Update content
-            document.getElementById('salesNotifImage').src = sale.product_image;
+            // Update content - backend already provides fallback image
+            const imgElement = document.getElementById('salesNotifImage');
+            if (imgElement && sale.product_image) {
+                imgElement.src = sale.product_image;
+                // Add error handler to prevent console errors
+                imgElement.onerror = function() {
+                    // Fallback to UI Avatars if image fails
+                    const productName = encodeURIComponent(sale.product_name || 'Product');
+                    this.src = `https://ui-avatars.com/api/?name=${productName}&size=60&background=d4a017&color=fff&bold=true`;
+                    this.onerror = null; // Prevent infinite loop
+                };
+            }
+            
             document.getElementById('salesNotifCustomer').textContent = sale.customer_name;
             document.getElementById('salesNotifCity').textContent = 'dari ' + sale.city;
             document.getElementById('salesNotifProduct').innerHTML = 'baru saja membeli <strong>' + sale.product_name.substring(0, 35) + '</strong>';

@@ -16,9 +16,8 @@ use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\SettingController as AdminSettingController;
 
-// User Controllers
-use App\Http\Controllers\User\DashboardController as UserDashboardController;
 use App\Http\Controllers\User\OrderController as UserOrderController;
+use App\Http\Controllers\Api\ShippingController;
 
 // ============================================================================
 // PUBLIC ROUTES (Tanpa Authentication)
@@ -108,8 +107,20 @@ Route::middleware(['auth'])->prefix('my')->name('user.')->group(function () {
         Route::get('/create', [UserOrderController::class, 'create'])->name('create');
         Route::post('/', [UserOrderController::class, 'store'])->name('store');
         Route::get('/{order}', [UserOrderController::class, 'show'])->name('show');
+        Route::get('/{order}/edit', [UserOrderController::class, 'edit'])->name('edit');
+        Route::put('/{order}', [UserOrderController::class, 'update'])->name('update');
         Route::post('/{order}/pay', [UserOrderController::class, 'processPayment'])->name('pay');
         Route::put('/{order}/cancel', [UserOrderController::class, 'cancel'])->name('cancel');
+    });
+
+    // Shipping API (Internal)
+    Route::prefix('shipping')->name('shipping.')->group(function () {
+        Route::get('/provinces', [ShippingController::class, 'provinces'])->name('provinces');
+        Route::get('/cities/{province_id}', [ShippingController::class, 'cities'])->name('cities');
+        Route::get('/districts/{city_id}', [ShippingController::class, 'districts'])->name('districts');
+        Route::get('/subdistricts/{district_id}', [ShippingController::class, 'subdistricts'])->name('subdistricts');
+        Route::post('/calculate', [ShippingController::class, 'calculate'])->name('calculate');
+        Route::post('/validate-code', [ShippingController::class, 'validateCode'])->name('validate-code');
     });
 });
 

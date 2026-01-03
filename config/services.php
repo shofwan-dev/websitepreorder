@@ -39,4 +39,14 @@ return [
         'production_url' => 'https://my.ipaymu.com/api/v2',
     ],
 
+    'binderbyte' => [
+        'api_key' => env('BINDERBYTE_API_KEY', '8e49f28e0f2f2cf56393c352613eec358e85fb7077ce6f7f453ebb826a7b1f6d'),
+    ],
+
+    'rajaongkir' => [
+        'api_key' => env('RAJAONGKIR_API_KEY', ''),
+        'account_type' => env('RAJAONGKIR_ACCOUNT_TYPE', 'starter'), // starter, basic, or pro
+        'origin_city' => env('RAJAONGKIR_ORIGIN_CITY', '151'), // Default: Bandung (151)
+    ],
+
 ];
